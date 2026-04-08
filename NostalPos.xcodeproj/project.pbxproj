@@ -1,0 +1,709 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		361DEEF72EFFA94700E76EDA /* TableTimerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 361DEEF62EFFA94700E76EDA /* TableTimerStore.swift */; };
+		361DEEF92F017F5900E76EDA /* ClearedTablesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 361DEEF82F017F5900E76EDA /* ClearedTablesStore.swift */; };
+		361DEEFD2F100000000ABCDE /* TodoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 361DEEFC2F100000000ABCDE /* TodoStore.swift */; };
+		361DEEFB2F057BCF00E76EDA /* LinePayCameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 361DEEFA2F057BCF00E76EDA /* LinePayCameraManager.swift */; };
+		36B023072ECBA1D300A6EFB2 /* NostalPosApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B023062ECBA1D300A6EFB2 /* NostalPosApp.swift */; };
+		36B023092ECBA1D300A6EFB2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B023082ECBA1D300A6EFB2 /* ContentView.swift */; };
+		36B0230B2ECBA1D400A6EFB2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 36B0230A2ECBA1D400A6EFB2 /* Assets.xcassets */; };
+		36B0230E2ECBA1D400A6EFB2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 36B0230D2ECBA1D400A6EFB2 /* Preview Assets.xcassets */; };
+		36B023182ECBA1D500A6EFB2 /* NostalPosTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B023172ECBA1D500A6EFB2 /* NostalPosTests.swift */; };
+		36B023222ECBA1D500A6EFB2 /* NostalPosUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B023212ECBA1D500A6EFB2 /* NostalPosUITests.swift */; };
+		36B023242ECBA1D500A6EFB2 /* NostalPosUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B023232ECBA1D500A6EFB2 /* NostalPosUITestsLaunchTests.swift */; };
+		36B023312ECBA25500A6EFB2 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B023302ECBA25500A6EFB2 /* Models.swift */; };
+		36B023332ECBA30400A6EFB2 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B023322ECBA30300A6EFB2 /* APIClient.swift */; };
+		36B023372ECBA79500A6EFB2 /* TableTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B023362ECBA79500A6EFB2 /* TableTimer.swift */; };
+		36B023392ECC497C00A6EFB2 /* TableCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B023382ECC497C00A6EFB2 /* TableCard.swift */; };
+		36B0233B2ECC5BD700A6EFB2 /* TableOrderSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B0233A2ECC5BD700A6EFB2 /* TableOrderSheet.swift */; };
+		36B0233D2ECC6ACC00A6EFB2 /* ItemOptionsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B0233C2ECC6ACC00A6EFB2 /* ItemOptionsSheet.swift */; };
+		36B023412ECC713400A6EFB2 /* OrderModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B023402ECC713400A6EFB2 /* OrderModels.swift */; };
+		36B023452ECC7F6400A6EFB2 /* PaymentMethod.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B023442ECC7F6400A6EFB2 /* PaymentMethod.swift */; };
+		36B023472ECC7F8300A6EFB2 /* CheckoutSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B023462ECC7F8300A6EFB2 /* CheckoutSheet.swift */; };
+		36B023492ECC80D200A6EFB2 /* CartPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B023482ECC80D200A6EFB2 /* CartPanel.swift */; };
+		36B0234B2ECCCA0900A6EFB2 /* UnifiedCheckoutSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B0234A2ECCCA0900A6EFB2 /* UnifiedCheckoutSheet.swift */; };
+		36B0234F2ECCEC4400A6EFB2 /* LinePayCameraSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B0234E2ECCEC4400A6EFB2 /* LinePayCameraSheet.swift */; };
+		36B023552ECCFED600A6EFB2 /* CameraPermissionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B023542ECCFED600A6EFB2 /* CameraPermissionManager.swift */; };
+		36B023582ECDA0E000A6EFB2 /* LinePayService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B023572ECDA0E000A6EFB2 /* LinePayService.swift */; };
+		36B0235A2ECE0D6B00A6EFB2 /* AdminPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B023592ECE0D6B00A6EFB2 /* AdminPanelView.swift */; };
+		36B0235C2ECE0D8E00A6EFB2 /* TodayOrdersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B0235B2ECE0D8E00A6EFB2 /* TodayOrdersView.swift */; };
+		36B0235E2ECEC3F200A6EFB2 /* CloseShiftView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B0235D2ECEC3F100A6EFB2 /* CloseShiftView.swift */; };
+		36B023602ECECEE100A6EFB2 /* TableHistorySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B0235F2ECECEE100A6EFB2 /* TableHistorySheet.swift */; };
+		36B023622ECF366000A6EFB2 /* PrinterManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B023612ECF366000A6EFB2 /* PrinterManager.swift */; };
+		CCDD00022EFF000000112233 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCDD00012EFF000000112233 /* DashboardView.swift */; };
+		CCDD00042EFF000000112233 /* CakeOrderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCDD00032EFF000000112233 /* CakeOrderService.swift */; };
+		CCDD00062EFF000000112233 /* ReservationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCDD00052EFF000000112233 /* ReservationStore.swift */; };
+		36D5904E2EEEA9910058A322 /* POSViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36D5904D2EEEA9910058A322 /* POSViewModel.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		36B023142ECBA1D500A6EFB2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 36B022FB2ECBA1D300A6EFB2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 36B023022ECBA1D300A6EFB2;
+			remoteInfo = NostalPos;
+		};
+		36B0231E2ECBA1D500A6EFB2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 36B022FB2ECBA1D300A6EFB2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 36B023022ECBA1D300A6EFB2;
+			remoteInfo = NostalPos;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		361DEEF62EFFA94700E76EDA /* TableTimerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableTimerStore.swift; sourceTree = "<group>"; };
+		361DEEF82F017F5900E76EDA /* ClearedTablesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClearedTablesStore.swift; sourceTree = "<group>"; };
+		361DEEFC2F100000000ABCDE /* TodoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoStore.swift; sourceTree = "<group>"; };
+		361DEEFA2F057BCF00E76EDA /* LinePayCameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinePayCameraManager.swift; sourceTree = "<group>"; };
+		36B023032ECBA1D300A6EFB2 /* NostalPos.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NostalPos.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		36B023062ECBA1D300A6EFB2 /* NostalPosApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostalPosApp.swift; sourceTree = "<group>"; };
+		36B023082ECBA1D300A6EFB2 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		36B0230A2ECBA1D400A6EFB2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		36B0230D2ECBA1D400A6EFB2 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		36B023132ECBA1D500A6EFB2 /* NostalPosTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NostalPosTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		36B023172ECBA1D500A6EFB2 /* NostalPosTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostalPosTests.swift; sourceTree = "<group>"; };
+		36B0231D2ECBA1D500A6EFB2 /* NostalPosUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NostalPosUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		36B023212ECBA1D500A6EFB2 /* NostalPosUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostalPosUITests.swift; sourceTree = "<group>"; };
+		36B023232ECBA1D500A6EFB2 /* NostalPosUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostalPosUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		36B023302ECBA25500A6EFB2 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		36B023322ECBA30300A6EFB2 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		36B023362ECBA79500A6EFB2 /* TableTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableTimer.swift; sourceTree = "<group>"; };
+		36B023382ECC497C00A6EFB2 /* TableCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableCard.swift; sourceTree = "<group>"; };
+		36B0233A2ECC5BD700A6EFB2 /* TableOrderSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableOrderSheet.swift; sourceTree = "<group>"; };
+		36B0233C2ECC6ACC00A6EFB2 /* ItemOptionsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemOptionsSheet.swift; sourceTree = "<group>"; };
+		36B023402ECC713400A6EFB2 /* OrderModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderModels.swift; sourceTree = "<group>"; };
+		36B023442ECC7F6400A6EFB2 /* PaymentMethod.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentMethod.swift; sourceTree = "<group>"; };
+		36B023462ECC7F8300A6EFB2 /* CheckoutSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckoutSheet.swift; sourceTree = "<group>"; };
+		36B023482ECC80D200A6EFB2 /* CartPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CartPanel.swift; sourceTree = "<group>"; };
+		36B0234A2ECCCA0900A6EFB2 /* UnifiedCheckoutSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedCheckoutSheet.swift; sourceTree = "<group>"; };
+		36B0234E2ECCEC4400A6EFB2 /* LinePayCameraSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinePayCameraSheet.swift; sourceTree = "<group>"; };
+		36B023542ECCFED600A6EFB2 /* CameraPermissionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPermissionManager.swift; sourceTree = "<group>"; };
+		36B023562ECD03DA00A6EFB2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		36B023572ECDA0E000A6EFB2 /* LinePayService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinePayService.swift; sourceTree = "<group>"; };
+		36B023592ECE0D6B00A6EFB2 /* AdminPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminPanelView.swift; sourceTree = "<group>"; };
+		36B0235B2ECE0D8E00A6EFB2 /* TodayOrdersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayOrdersView.swift; sourceTree = "<group>"; };
+		36B0235D2ECEC3F100A6EFB2 /* CloseShiftView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloseShiftView.swift; sourceTree = "<group>"; };
+		36B0235F2ECECEE100A6EFB2 /* TableHistorySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableHistorySheet.swift; sourceTree = "<group>"; };
+		36B023612ECF366000A6EFB2 /* PrinterManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrinterManager.swift; sourceTree = "<group>"; };
+		CCDD00012EFF000000112233 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		CCDD00032EFF000000112233 /* CakeOrderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CakeOrderService.swift; sourceTree = "<group>"; };
+		CCDD00052EFF000000112233 /* ReservationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReservationStore.swift; sourceTree = "<group>"; };
+		36D5904D2EEEA9910058A322 /* POSViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = POSViewModel.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		36B023002ECBA1D300A6EFB2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		36B023102ECBA1D500A6EFB2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		36B0231A2ECBA1D500A6EFB2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		36B022FA2ECBA1D300A6EFB2 = {
+			isa = PBXGroup;
+			children = (
+				36B023052ECBA1D300A6EFB2 /* NostalPos */,
+				36B023162ECBA1D500A6EFB2 /* NostalPosTests */,
+				36B023202ECBA1D500A6EFB2 /* NostalPosUITests */,
+				36B023042ECBA1D300A6EFB2 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		36B023042ECBA1D300A6EFB2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				36B023032ECBA1D300A6EFB2 /* NostalPos.app */,
+				36B023132ECBA1D500A6EFB2 /* NostalPosTests.xctest */,
+				36B0231D2ECBA1D500A6EFB2 /* NostalPosUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		36B023052ECBA1D300A6EFB2 /* NostalPos */ = {
+			isa = PBXGroup;
+			children = (
+				36B023562ECD03DA00A6EFB2 /* Info.plist */,
+				36B023302ECBA25500A6EFB2 /* Models.swift */,
+				36B023062ECBA1D300A6EFB2 /* NostalPosApp.swift */,
+				36B023322ECBA30300A6EFB2 /* APIClient.swift */,
+				36B023082ECBA1D300A6EFB2 /* ContentView.swift */,
+				36B023362ECBA79500A6EFB2 /* TableTimer.swift */,
+				36D5904D2EEEA9910058A322 /* POSViewModel.swift */,
+				36B0230A2ECBA1D400A6EFB2 /* Assets.xcassets */,
+				36B0230C2ECBA1D400A6EFB2 /* Preview Content */,
+				36B023382ECC497C00A6EFB2 /* TableCard.swift */,
+				36B0233A2ECC5BD700A6EFB2 /* TableOrderSheet.swift */,
+				36B0233C2ECC6ACC00A6EFB2 /* ItemOptionsSheet.swift */,
+				36B023402ECC713400A6EFB2 /* OrderModels.swift */,
+				36B023442ECC7F6400A6EFB2 /* PaymentMethod.swift */,
+				36B023462ECC7F8300A6EFB2 /* CheckoutSheet.swift */,
+				36B023482ECC80D200A6EFB2 /* CartPanel.swift */,
+				36B0234A2ECCCA0900A6EFB2 /* UnifiedCheckoutSheet.swift */,
+				36B0234E2ECCEC4400A6EFB2 /* LinePayCameraSheet.swift */,
+				36B023542ECCFED600A6EFB2 /* CameraPermissionManager.swift */,
+				36B023572ECDA0E000A6EFB2 /* LinePayService.swift */,
+				36B023592ECE0D6B00A6EFB2 /* AdminPanelView.swift */,
+				36B0235B2ECE0D8E00A6EFB2 /* TodayOrdersView.swift */,
+				36B0235D2ECEC3F100A6EFB2 /* CloseShiftView.swift */,
+				36B0235F2ECECEE100A6EFB2 /* TableHistorySheet.swift */,
+				36B023612ECF366000A6EFB2 /* PrinterManager.swift */,
+				361DEEF62EFFA94700E76EDA /* TableTimerStore.swift */,
+				361DEEF82F017F5900E76EDA /* ClearedTablesStore.swift */,
+				361DEEFA2F057BCF00E76EDA /* LinePayCameraManager.swift */,
+				CCDD00012EFF000000112233 /* DashboardView.swift */,
+				CCDD00032EFF000000112233 /* CakeOrderService.swift */,
+				CCDD00052EFF000000112233 /* ReservationStore.swift */,
+				361DEEFC2F100000000ABCDE /* TodoStore.swift */,
+			);
+			path = NostalPos;
+			sourceTree = "<group>";
+		};
+		36B0230C2ECBA1D400A6EFB2 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				36B0230D2ECBA1D400A6EFB2 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		36B023162ECBA1D500A6EFB2 /* NostalPosTests */ = {
+			isa = PBXGroup;
+			children = (
+				36B023172ECBA1D500A6EFB2 /* NostalPosTests.swift */,
+			);
+			path = NostalPosTests;
+			sourceTree = "<group>";
+		};
+		36B023202ECBA1D500A6EFB2 /* NostalPosUITests */ = {
+			isa = PBXGroup;
+			children = (
+				36B023212ECBA1D500A6EFB2 /* NostalPosUITests.swift */,
+				36B023232ECBA1D500A6EFB2 /* NostalPosUITestsLaunchTests.swift */,
+			);
+			path = NostalPosUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		36B023022ECBA1D300A6EFB2 /* NostalPos */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 36B023272ECBA1D500A6EFB2 /* Build configuration list for PBXNativeTarget "NostalPos" */;
+			buildPhases = (
+				36B022FF2ECBA1D300A6EFB2 /* Sources */,
+				36B023002ECBA1D300A6EFB2 /* Frameworks */,
+				36B023012ECBA1D300A6EFB2 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = NostalPos;
+			productName = NostalPos;
+			productReference = 36B023032ECBA1D300A6EFB2 /* NostalPos.app */;
+			productType = "com.apple.product-type.application";
+		};
+		36B023122ECBA1D500A6EFB2 /* NostalPosTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 36B0232A2ECBA1D500A6EFB2 /* Build configuration list for PBXNativeTarget "NostalPosTests" */;
+			buildPhases = (
+				36B0230F2ECBA1D500A6EFB2 /* Sources */,
+				36B023102ECBA1D500A6EFB2 /* Frameworks */,
+				36B023112ECBA1D500A6EFB2 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				36B023152ECBA1D500A6EFB2 /* PBXTargetDependency */,
+			);
+			name = NostalPosTests;
+			productName = NostalPosTests;
+			productReference = 36B023132ECBA1D500A6EFB2 /* NostalPosTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		36B0231C2ECBA1D500A6EFB2 /* NostalPosUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 36B0232D2ECBA1D500A6EFB2 /* Build configuration list for PBXNativeTarget "NostalPosUITests" */;
+			buildPhases = (
+				36B023192ECBA1D500A6EFB2 /* Sources */,
+				36B0231A2ECBA1D500A6EFB2 /* Frameworks */,
+				36B0231B2ECBA1D500A6EFB2 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				36B0231F2ECBA1D500A6EFB2 /* PBXTargetDependency */,
+			);
+			name = NostalPosUITests;
+			productName = NostalPosUITests;
+			productReference = 36B0231D2ECBA1D500A6EFB2 /* NostalPosUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		36B022FB2ECBA1D300A6EFB2 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1540;
+				LastUpgradeCheck = 1540;
+				TargetAttributes = {
+					36B023022ECBA1D300A6EFB2 = {
+						CreatedOnToolsVersion = 15.4;
+					};
+					36B023122ECBA1D500A6EFB2 = {
+						CreatedOnToolsVersion = 15.4;
+						TestTargetID = 36B023022ECBA1D300A6EFB2;
+					};
+					36B0231C2ECBA1D500A6EFB2 = {
+						CreatedOnToolsVersion = 15.4;
+						TestTargetID = 36B023022ECBA1D300A6EFB2;
+					};
+				};
+			};
+			buildConfigurationList = 36B022FE2ECBA1D300A6EFB2 /* Build configuration list for PBXProject "NostalPos" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 36B022FA2ECBA1D300A6EFB2;
+			productRefGroup = 36B023042ECBA1D300A6EFB2 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				36B023022ECBA1D300A6EFB2 /* NostalPos */,
+				36B023122ECBA1D500A6EFB2 /* NostalPosTests */,
+				36B0231C2ECBA1D500A6EFB2 /* NostalPosUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		36B023012ECBA1D300A6EFB2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				36B0230E2ECBA1D400A6EFB2 /* Preview Assets.xcassets in Resources */,
+				36B0230B2ECBA1D400A6EFB2 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		36B023112ECBA1D500A6EFB2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		36B0231B2ECBA1D500A6EFB2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		36B022FF2ECBA1D300A6EFB2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				36B0235E2ECEC3F200A6EFB2 /* CloseShiftView.swift in Sources */,
+				36B023492ECC80D200A6EFB2 /* CartPanel.swift in Sources */,
+				361DEEFB2F057BCF00E76EDA /* LinePayCameraManager.swift in Sources */,
+				36B0233D2ECC6ACC00A6EFB2 /* ItemOptionsSheet.swift in Sources */,
+				36B0235C2ECE0D8E00A6EFB2 /* TodayOrdersView.swift in Sources */,
+				36B023372ECBA79500A6EFB2 /* TableTimer.swift in Sources */,
+				36B023312ECBA25500A6EFB2 /* Models.swift in Sources */,
+				36B023602ECECEE100A6EFB2 /* TableHistorySheet.swift in Sources */,
+				36B023092ECBA1D300A6EFB2 /* ContentView.swift in Sources */,
+				36B023072ECBA1D300A6EFB2 /* NostalPosApp.swift in Sources */,
+				36B0234F2ECCEC4400A6EFB2 /* LinePayCameraSheet.swift in Sources */,
+				36B023582ECDA0E000A6EFB2 /* LinePayService.swift in Sources */,
+				36B023392ECC497C00A6EFB2 /* TableCard.swift in Sources */,
+				36B0234B2ECCCA0900A6EFB2 /* UnifiedCheckoutSheet.swift in Sources */,
+				36B0235A2ECE0D6B00A6EFB2 /* AdminPanelView.swift in Sources */,
+				36B0233B2ECC5BD700A6EFB2 /* TableOrderSheet.swift in Sources */,
+				36B023332ECBA30400A6EFB2 /* APIClient.swift in Sources */,
+				36B023552ECCFED600A6EFB2 /* CameraPermissionManager.swift in Sources */,
+				36B023472ECC7F8300A6EFB2 /* CheckoutSheet.swift in Sources */,
+				36B023622ECF366000A6EFB2 /* PrinterManager.swift in Sources */,
+				361DEEF92F017F5900E76EDA /* ClearedTablesStore.swift in Sources */,
+				361DEEF72EFFA94700E76EDA /* TableTimerStore.swift in Sources */,
+				36D5904E2EEEA9910058A322 /* POSViewModel.swift in Sources */,
+				CCDD00022EFF000000112233 /* DashboardView.swift in Sources */,
+				CCDD00042EFF000000112233 /* CakeOrderService.swift in Sources */,
+				CCDD00062EFF000000112233 /* ReservationStore.swift in Sources */,
+				361DEEFD2F100000000ABCDE /* TodoStore.swift in Sources */,
+				36B023412ECC713400A6EFB2 /* OrderModels.swift in Sources */,
+				36B023452ECC7F6400A6EFB2 /* PaymentMethod.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		36B0230F2ECBA1D500A6EFB2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				36B023182ECBA1D500A6EFB2 /* NostalPosTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		36B023192ECBA1D500A6EFB2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				36B023242ECBA1D500A6EFB2 /* NostalPosUITestsLaunchTests.swift in Sources */,
+				36B023222ECBA1D500A6EFB2 /* NostalPosUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		36B023152ECBA1D500A6EFB2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 36B023022ECBA1D300A6EFB2 /* NostalPos */;
+			targetProxy = 36B023142ECBA1D500A6EFB2 /* PBXContainerItemProxy */;
+		};
+		36B0231F2ECBA1D500A6EFB2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 36B023022ECBA1D300A6EFB2 /* NostalPos */;
+			targetProxy = 36B0231E2ECBA1D500A6EFB2 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		36B023252ECBA1D500A6EFB2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		36B023262ECBA1D500A6EFB2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		36B023282ECBA1D500A6EFB2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"NostalPos/Preview Content\"";
+				DEVELOPMENT_TEAM = YG67M92VU4;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = NostalPos/Info.plist;
+				"INFOPLIST_FILE[sdk=*]" = "";
+				INFOPLIST_KEY_NSCameraUsageDescription = "此 App 需要使用相機來掃描 QR Code";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.noscoffee.NostalPos;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		36B023292ECBA1D500A6EFB2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"NostalPos/Preview Content\"";
+				DEVELOPMENT_TEAM = YG67M92VU4;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = NostalPos/Info.plist;
+				"INFOPLIST_FILE[sdk=*]" = "";
+				INFOPLIST_KEY_NSCameraUsageDescription = "此 App 需要使用相機來掃描 QR Code";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.noscoffee.NostalPos;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		36B0232B2ECBA1D500A6EFB2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = YG67M92VU4;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.noscoffee.NostalPosTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/NostalPos.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/NostalPos";
+			};
+			name = Debug;
+		};
+		36B0232C2ECBA1D500A6EFB2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = YG67M92VU4;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.noscoffee.NostalPosTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/NostalPos.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/NostalPos";
+			};
+			name = Release;
+		};
+		36B0232E2ECBA1D500A6EFB2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = YG67M92VU4;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.noscoffee.NostalPosUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = NostalPos;
+			};
+			name = Debug;
+		};
+		36B0232F2ECBA1D500A6EFB2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = YG67M92VU4;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.noscoffee.NostalPosUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = NostalPos;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		36B022FE2ECBA1D300A6EFB2 /* Build configuration list for PBXProject "NostalPos" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				36B023252ECBA1D500A6EFB2 /* Debug */,
+				36B023262ECBA1D500A6EFB2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		36B023272ECBA1D500A6EFB2 /* Build configuration list for PBXNativeTarget "NostalPos" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				36B023282ECBA1D500A6EFB2 /* Debug */,
+				36B023292ECBA1D500A6EFB2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		36B0232A2ECBA1D500A6EFB2 /* Build configuration list for PBXNativeTarget "NostalPosTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				36B0232B2ECBA1D500A6EFB2 /* Debug */,
+				36B0232C2ECBA1D500A6EFB2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		36B0232D2ECBA1D500A6EFB2 /* Build configuration list for PBXNativeTarget "NostalPosUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				36B0232E2ECBA1D500A6EFB2 /* Debug */,
+				36B0232F2ECBA1D500A6EFB2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 36B022FB2ECBA1D300A6EFB2 /* Project object */;
+}
