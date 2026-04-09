@@ -89,6 +89,16 @@ struct CloseShiftResultResponse: Decodable {
     let message: String?
 }
 
+struct ArchiveMonthResponse: Decodable {
+    let ok: Bool?
+    let month: String?
+    let archivedRows: Int?
+    let deletedRows: Int?
+    let archiveSheetName: String?
+    let error: String?
+    let message: String?
+}
+
 // MARK: - APIClient
 
 final class APIClient {
@@ -696,5 +706,155 @@ extension APIClient {
     func closeShift(date: String? = nil) async throws -> CloseShiftResultResponse {
         let body = CloseShiftRequestBody(date: date)
         return try await postJSON(body, as: CloseShiftResultResponse.self, timeout: 40)
+    }
+
+    struct ArchiveMonthRequestBody: Encodable {
+        let action = "archiveCurrentMonth"
+        let month: String?
+
+        init(month: String? = nil) {
+            self.month = month
+        }
+    }
+
+    /// 手動封存指定月份已關帳訂單（預設當月）
+    func archiveCurrentMonth(month: String? = nil) async throws -> ArchiveMonthResponse {
+        let body = ArchiveMonthRequestBody(month: month)
+        return try await postJSON(body, as: ArchiveMonthResponse.self, timeout: 180)
+    }
+}
+
+// MARK: - 訂位 API
+
+extension APIClient {
+
+    struct ReservationPayload: Encodable {
+        let id: String
+        let date: String
+        let time: String
+        let name: String
+        let title: String
+        let phone: String
+        let adults: Int
+        let children: Int
+        let note: String
+        let status: String
+
+        init(from r: Reservation) {
+            id       = r.id.uuidString
+            date     = r.date
+            time     = r.time
+            name     = r.name
+            title    = r.title.rawValue
+            phone    = r.phone
+            adults   = r.adults
+            children = r.children
+            note     = r.note
+            status   = r.status.rawValue
+        }
+    }
+
+    struct ReservationStatusPayload: Encodable {
+        let id: String
+        let status: String
+    }
+
+    private struct CreateReservationBody: Encodable {
+        let action = "createReservation"
+        let reservation: ReservationPayload
+    }
+
+    private struct UpdateReservationBody: Encodable {
+        let action = "updateReservation"
+        let reservation: ReservationPayload
+    }
+
+    private struct UpdateReservationStatusBody: Encodable {
+        let action = "updateReservation"
+        let reservation: ReservationStatusPayload
+    }
+
+    private struct DeleteReservationBody: Encodable {
+        let action = "deleteReservation"
+        let id: String
+    }
+
+    private struct ReservationsResponse: Decodable {
+        let ok: Bool?
+        let reservations: [ReservationItem]?
+
+        struct ReservationItem: Decodable {
+            let id: String
+            let date: String
+            let time: String
+            let name: String
+            let title: String
+            let phone: String
+            let adults: Int
+            let children: Int
+            let note: String
+            let status: String
+
+            func toReservation() -> Reservation? {
+                guard let uuid = UUID(uuidString: id) else { return nil }
+                let t: ReservationTitle
+                switch title {
+                case "先生": t = .mr
+                case "小姐": t = .ms
+                default:    t = .none
+                }
+                let s: ReservationStatus
+                switch status {
+                case "arrived": s = .arrived
+                case "noShow":  s = .noShow
+                default:        s = .pending
+                }
+                return Reservation(id: uuid, date: date, time: time, name: name,
+                                   title: t, phone: phone, adults: adults,
+                                   children: children, note: note, status: s)
+            }
+        }
+    }
+
+    func fetchReservations() async throws -> [Reservation] {
+        let response = try await getJSON(action: "getReservations", timeout: 20, as: ReservationsResponse.self)
+        return (response.reservations ?? []).compactMap { $0.toReservation() }
+    }
+
+    func createReservation(_ r: Reservation) async throws {
+        let body = CreateReservationBody(reservation: ReservationPayload(from: r))
+        let _: GenericOKResponse = try await postJSON(body, as: GenericOKResponse.self, timeout: 20)
+    }
+
+    func updateReservation(_ r: Reservation) async throws {
+        let body = UpdateReservationBody(reservation: ReservationPayload(from: r))
+        let _: GenericOKResponse = try await postJSON(body, as: GenericOKResponse.self, timeout: 20)
+    }
+
+    func deleteReservation(id: UUID) async throws {
+        let body = DeleteReservationBody(id: id.uuidString)
+        let _: GenericOKResponse = try await postJSON(body, as: GenericOKResponse.self, timeout: 20)
+    }
+
+    // MARK: - Blacklist
+
+    private struct BlacklistResponse: Decodable {
+        let ok: Bool?
+        let phones: [String]?
+    }
+
+    private struct AddBlacklistBody: Encodable {
+        let action = "addToBlacklist"
+        let phone: String
+    }
+
+    func fetchBlacklist() async throws -> [String] {
+        let response = try await getJSON(action: "getBlacklist", timeout: 15, as: BlacklistResponse.self)
+        return response.phones ?? []
+    }
+
+    func addToBlacklist(phone: String) async throws {
+        let body = AddBlacklistBody(phone: phone)
+        let _: GenericOKResponse = try await postJSON(body, as: GenericOKResponse.self, timeout: 15)
     }
 }

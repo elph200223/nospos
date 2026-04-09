@@ -42,7 +42,9 @@ final class CloseShiftViewModel: ObservableObject {
     @Published var closeSummary: CloseShiftSummaryDTO?
     @Published var isLoading = false
     @Published var isClosing = false
+    @Published var isArchiving = false
     @Published var errorMessage: String?
+    @Published var archiveMessage: String?
 
     // MARK: - 讀取畫面所需資料
 
@@ -139,6 +141,60 @@ final class CloseShiftViewModel: ObservableObject {
             errorMessage = error.localizedDescription
         }
     }
+
+    // MARK: - 手動封存上個月已關帳資料
+
+    /// 計算上個月的 yyyy-MM 字串
+    private var previousMonthString: String {
+        let cal = Calendar.current
+        let now = Date()
+        let firstOfThisMonth = cal.date(from: cal.dateComponents([.year, .month], from: now))!
+        let firstOfLastMonth = cal.date(byAdding: .month, value: -1, to: firstOfThisMonth)!
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyy-MM"
+        return fmt.string(from: firstOfLastMonth)
+    }
+
+    var previousMonthDisplay: String {
+        let fmt = DateFormatter()
+        fmt.locale = Locale(identifier: "zh_TW")
+        fmt.dateFormat = "yyyy年M月"
+        let cal = Calendar.current
+        let now = Date()
+        let firstOfThisMonth = cal.date(from: cal.dateComponents([.year, .month], from: now))!
+        let firstOfLastMonth = cal.date(byAdding: .month, value: -1, to: firstOfThisMonth)!
+        return fmt.string(from: firstOfLastMonth)
+    }
+
+    func archivePreviousMonth() async {
+        isArchiving = true
+        archiveMessage = nil
+        errorMessage = nil
+        defer { isArchiving = false }
+
+        do {
+            let result = try await APIClient.shared.archiveCurrentMonth(month: previousMonthString)
+
+            if let ok = result.ok, !ok {
+                throw NSError(
+                    domain: "CloseShift",
+                    code: -2001,
+                    userInfo: [NSLocalizedDescriptionKey: result.error ?? "封存失敗"]
+                )
+            }
+
+            let archived = result.archivedRows ?? 0
+            let sheet = result.archiveSheetName ?? ""
+            if archived > 0 {
+                archiveMessage = "已封存 \(archived) 筆至「\(sheet)」"
+            } else {
+                archiveMessage = "\(previousMonthDisplay)沒有可封存的已關帳資料"
+            }
+
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
 }
 
 // MARK: - View
@@ -146,6 +202,7 @@ final class CloseShiftViewModel: ObservableObject {
 struct CloseShiftView: View {
 
     @StateObject private var viewModel = CloseShiftViewModel()
+    @State private var showArchiveConfirm = false
 
     var body: some View {
         NavigationView {
@@ -158,8 +215,16 @@ struct CloseShiftView: View {
                         } label: {
                             Image(systemName: "arrow.clockwise")
                         }
-                        .disabled(viewModel.isLoading || viewModel.isClosing)
+                        .disabled(viewModel.isLoading || viewModel.isClosing || viewModel.isArchiving)
                     }
+                }
+                .alert("封存\(viewModel.previousMonthDisplay)已關帳資料", isPresented: $showArchiveConfirm) {
+                    Button("取消", role: .cancel) {}
+                    Button("確認封存", role: .destructive) {
+                        Task { await viewModel.archivePreviousMonth() }
+                    }
+                } message: {
+                    Text("將\(viewModel.previousMonthDisplay)所有已關帳訂單移至封存工作表並從主表刪除。此動作不可復原，確定嗎？")
                 }
         }
         .task {
@@ -239,6 +304,31 @@ struct CloseShiftView: View {
                             }
                         }
                         .disabled(viewModel.isClosing || close.orderCount == 0)
+                    }
+
+                    Section(footer: Text("封存後資料會從主表移除，存至獨立工作表（如 Orders_Archive_2026_03）")) {
+                        if let msg = viewModel.archiveMessage {
+                            Text(msg)
+                                .foregroundColor(.secondary)
+                                .font(.footnote)
+                        }
+                        Button {
+                            showArchiveConfirm = true
+                        } label: {
+                            if viewModel.isArchiving {
+                                HStack {
+                                    Spacer()
+                                    ProgressView()
+                                    Text(" 封存中…")
+                                    Spacer()
+                                }
+                            } else {
+                                Text("封存\(viewModel.previousMonthDisplay)已關帳資料")
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                                    .foregroundColor(.orange)
+                            }
+                        }
+                        .disabled(viewModel.isArchiving || viewModel.isClosing)
                     }
                 }
             }

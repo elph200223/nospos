@@ -52,42 +52,104 @@ struct Reservation: Identifiable, Codable {
     }
 }
 
+@MainActor
 final class ReservationStore: ObservableObject {
     static let shared = ReservationStore()
     @Published var reservations: [Reservation] = []
+    @Published var isLoading = false
+    @Published var lastError: String?
 
-    private let key = "pos.reservations"
+    private let legacyKey = "pos.reservations"
 
-    private init() { load() }
+    private init() {
+        loadLegacy()
+        Task { await refresh() }
+    }
 
+    // 從 GAS 重新抓取
+    func refresh() async {
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            let fetched = try await APIClient.shared.fetchReservations()
+            reservations = fetched.sorted { ($0.date + $0.time) < ($1.date + $1.time) }
+        } catch {
+            lastError = error.localizedDescription
+            print("⚠️ ReservationStore.refresh failed: \(error.localizedDescription)")
+        }
+    }
+
+    // 新增：樂觀更新 + 背景同步
     func add(_ r: Reservation) {
         reservations.append(r)
         reservations.sort { ($0.date + $0.time) < ($1.date + $1.time) }
-        save()
+        Task { try? await APIClient.shared.createReservation(r) }
     }
 
+    // 更新：樂觀更新 + 背景同步
     func update(_ r: Reservation) {
         guard let idx = reservations.firstIndex(where: { $0.id == r.id }) else { return }
         reservations[idx] = r
         reservations.sort { ($0.date + $0.time) < ($1.date + $1.time) }
-        save()
+        Task { try? await APIClient.shared.updateReservation(r) }
     }
 
+    // 刪除：樂觀更新 + 背景同步
     func delete(id: UUID) {
         reservations.removeAll { $0.id == id }
-        save()
+        Task { try? await APIClient.shared.deleteReservation(id: id) }
     }
 
-    private func load() {
-        guard let data = UserDefaults.standard.data(forKey: key),
-              let decoded = try? JSONDecoder().decode([Reservation].self, from: data)
+    // 首次啟動：把 UserDefaults 舊資料上傳到 GAS 後清除
+    private func loadLegacy() {
+        guard let data = UserDefaults.standard.data(forKey: legacyKey),
+              let decoded = try? JSONDecoder().decode([Reservation].self, from: data),
+              !decoded.isEmpty
         else { return }
-        reservations = decoded
+
+        reservations = decoded.sorted { ($0.date + $0.time) < ($1.date + $1.time) }
+
+        // 上傳到 GAS，完成後清除 UserDefaults
+        Task {
+            for r in decoded {
+                try? await APIClient.shared.createReservation(r)
+            }
+            UserDefaults.standard.removeObject(forKey: legacyKey)
+            print("✅ Legacy reservations migrated to GAS (\(decoded.count) items)")
+        }
+    }
+}
+
+// MARK: - 訂位黑名單（GAS 後台）
+
+@MainActor
+final class BlacklistStore: ObservableObject {
+    static let shared = BlacklistStore()
+    @Published var phones: Set<String> = []
+
+    private init() {
+        Task { await refresh() }
     }
 
-    private func save() {
-        guard let data = try? JSONEncoder().encode(reservations) else { return }
-        UserDefaults.standard.set(data, forKey: key)
+    func refresh() async {
+        do {
+            let fetched = try await APIClient.shared.fetchBlacklist()
+            phones = Set(fetched)
+        } catch {
+            print("⚠️ BlacklistStore.refresh failed: \(error.localizedDescription)")
+        }
+    }
+
+    func add(phone: String) {
+        let p = phone.trimmingCharacters(in: .whitespaces)
+        guard !p.isEmpty else { return }
+        phones.insert(p)
+        Task { try? await APIClient.shared.addToBlacklist(phone: p) }
+    }
+
+    func isBlacklisted(_ phone: String) -> Bool {
+        let p = phone.trimmingCharacters(in: .whitespaces)
+        return !p.isEmpty && phones.contains(p)
     }
 }
 

@@ -90,7 +90,12 @@ private struct CakeOrdersSection: View {
                         .background(Color.peacock)
                         .foregroundColor(.white)
                         .cornerRadius(6)
-                        Button { Task { await loadOrders() } } label: {
+                        Button {
+                            Task {
+                                await loadOrders()
+                                await reservationStore.refresh()
+                            }
+                        } label: {
                             Image(systemName: "arrow.clockwise")
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundColor(.peacock)
@@ -99,9 +104,17 @@ private struct CakeOrdersSection: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
 
+                    if let err = reservationStore.lastError {
+                        Text("訂位同步失敗：\(err)")
+                            .font(.caption)
+                            .foregroundColor(.red)
+                            .padding(.horizontal, 16)
+                            .padding(.bottom, 4)
+                    }
+
                     Divider()
 
-                    let colWidth = geo.size.width / 5
+                    let colWidth: CGFloat = 210
                     // 用內層 GeometryReader 量到欄位的實際可用高度（已扣掉 section header）
                     GeometryReader { colGeo in
                         ScrollView(.horizontal, showsIndicators: false) {
@@ -112,7 +125,14 @@ private struct CakeOrdersSection: View {
                                         dateLabel: label(for: date),
                                         dateKey: k,
                                         orders: ordersByDate[k] ?? [],
-                                        reservations: reservationStore.reservations.filter { $0.date == k },
+                                        reservations: reservationStore.reservations
+                                            .filter { $0.date == k }
+                                            .sorted {
+                                                let aDone = $0.status != .pending
+                                                let bDone = $1.status != .pending
+                                                if aDone != bDone { return !aDone }
+                                                return $0.time < $1.time
+                                            },
                                         totalHeight: colGeo.size.height,
                                         onAddReservation: { date in
                                             addReservationPresetDate = date
@@ -137,7 +157,16 @@ private struct CakeOrdersSection: View {
                         .onAppear { proxy.scrollTo(todayKey, anchor: .leading) }
                     }
                 }
-                .task { await loadOrders() }
+                .task {
+                    await loadOrders()
+                    await reservationStore.refresh()
+                    // 每分鐘自動更新
+                    while !Task.isCancelled {
+                        try? await Task.sleep(for: .seconds(60))
+                        await loadOrders()
+                        await reservationStore.refresh()
+                    }
+                }
                 .background(Color.white)
             }
         }
@@ -364,9 +393,12 @@ private struct ReservationInlineRow: View {
     let reservation: Reservation
     let onEdit: (Reservation) -> Void
     @ObservedObject private var store = ReservationStore.shared
+    @ObservedObject private var blacklist = BlacklistStore.shared
     @ObservedObject private var swipeCoordinator = SwipeCoordinator.shared
     @State private var swipeOffset: CGFloat = 0
     private let deleteWidth: CGFloat = 70
+
+    private var isDone: Bool { reservation.status == .arrived || reservation.status == .noShow }
 
     private var nameDisplay: String {
         reservation.name + (reservation.title == .none ? "" : " \(reservation.title.rawValue)")
@@ -397,17 +429,20 @@ private struct ReservationInlineRow: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(reservation.time)
                         .font(.subheadline)
-                        .foregroundColor(.peacock)
+                        .foregroundColor(isDone ? .secondary : .peacock)
+                        .strikethrough(isDone)
                     Text(nameDisplay)
                         .font(.subheadline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(isDone ? .secondary : .primary)
+                        .strikethrough(isDone)
                     Text("大 \(reservation.adults)・小 \(reservation.children)")
                         .font(.subheadline).foregroundColor(.secondary)
+                        .strikethrough(isDone)
                     if !reservation.phone.isEmpty {
                         Text(reservation.phone).font(.caption).foregroundColor(.secondary)
                     }
                     if !reservation.note.isEmpty {
-                        Text(reservation.note).font(.caption).foregroundColor(.orange)
+                        Text(reservation.note).font(.caption).foregroundColor(isDone ? .secondary : .orange)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -415,44 +450,61 @@ private struct ReservationInlineRow: View {
                 .padding(.top, 9)
                 .padding(.bottom, 7)
                 .contentShape(Rectangle())
-                .onTapGesture { onEdit(reservation) }
+                .onTapGesture { if !isDone { onEdit(reservation) } }
 
                 // 到達 / No Show
                 HStack(spacing: 0) {
                     Button {
                         var u = reservation
-                        u.status = reservation.status == .arrived ? .pending : .arrived
+                        u.status = .arrived
                         store.update(u)
                     } label: {
                         Text("到達")
                             .font(.caption.bold())
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 5)
-                            .background(reservation.status == .arrived ? Color.green : Color(white: 0.95))
-                            .foregroundColor(reservation.status == .arrived ? .white : Color(white: 0.55))
+                            .background(reservation.status == .arrived
+                                ? Color.green.opacity(0.25)
+                                : Color(red: 0.18, green: 0.72, blue: 0.35))
+                            .foregroundColor(reservation.status == .arrived
+                                ? Color.secondary
+                                : .white)
                     }
                     .buttonStyle(.plain)
+                    .disabled(isDone)
 
                     Rectangle().fill(Color(white: 0.88)).frame(width: 1)
 
                     Button {
                         var u = reservation
-                        u.status = reservation.status == .noShow ? .pending : .noShow
+                        u.status = .noShow
                         store.update(u)
+                        if !reservation.phone.isEmpty {
+                            blacklist.add(phone: reservation.phone)
+                        }
                     } label: {
                         Text("No Show")
                             .font(.caption.bold())
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 5)
-                            .background(reservation.status == .noShow ? Color.red.opacity(0.82) : Color(white: 0.95))
-                            .foregroundColor(reservation.status == .noShow ? .white : Color(white: 0.55))
+                            .background(reservation.status == .noShow
+                                ? Color.red.opacity(0.25)
+                                : Color(red: 0.95, green: 0.23, blue: 0.23))
+                            .foregroundColor(reservation.status == .noShow
+                                ? Color.secondary
+                                : .white)
                     }
                     .buttonStyle(.plain)
+                    .disabled(isDone)
                 }
             }
-            .background(Color.white)
+            .background(isDone ? Color(white: 0.96) : Color.white)
             .cornerRadius(10)
-            .shadow(color: .black.opacity(0.06), radius: 3, x: 0, y: 1)
+            .shadow(color: .black.opacity(isDone ? 0.02 : 0.06), radius: 3, x: 0, y: 1)
             .offset(x: swipeOffset)
             .highPriorityGesture(
                 DragGesture(minimumDistance: 5)
@@ -789,8 +841,11 @@ private struct AddReservationSheet: View {
     @State private var children = 0
     @State private var note = ""
     @State private var numPadMode: NumPadMode = .phone  // 右欄目前輸入哪個
+    @ObservedObject private var blacklist = BlacklistStore.shared
 
     enum NumPadMode { case phone, time }
+
+    private var isPhoneBlacklisted: Bool { blacklist.isBlacklisted(phone) }
 
     init(presetDate: Date = Calendar.current.startOfDay(for: Date()), onSave: @escaping (Reservation) -> Void) {
         self.onSave = onSave
@@ -901,13 +956,22 @@ private struct AddReservationSheet: View {
                         } label: {
                             HStack {
                                 Text(phone.isEmpty ? "點此輸入" : phone)
-                                    .foregroundColor(phone.isEmpty ? .secondary : .primary)
+                                    .foregroundColor(isPhoneBlacklisted ? .red : (phone.isEmpty ? .secondary : .primary))
                                 Spacer()
-                                if numPadMode == .phone {
+                                if isPhoneBlacklisted {
+                                    Image(systemName: "exclamationmark.triangle.fill")
+                                        .foregroundColor(.red)
+                                } else if numPadMode == .phone {
                                     Image(systemName: "chevron.right.circle.fill")
                                         .foregroundColor(.peacock)
                                 }
                             }
+                        }
+                        if isPhoneBlacklisted {
+                            Text("⚠️ 此號碼為黑名單對象")
+                                .font(.caption.bold())
+                                .foregroundColor(.red)
+                                .padding(.top, 2)
                         }
                     }
 
