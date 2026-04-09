@@ -62,8 +62,7 @@ private struct CakeOrdersSection: View {
     }
 
     var body: some View {
-        GeometryReader { geo in
-            ScrollViewReader { proxy in
+        ScrollViewReader { proxy in
                 VStack(alignment: .leading, spacing: 0) {
                     // 標題列
                     HStack(spacing: 12) {
@@ -114,7 +113,7 @@ private struct CakeOrdersSection: View {
 
                     Divider()
 
-                    let colWidth: CGFloat = 210
+                    let colWidth: CGFloat = 170
                     // 用內層 GeometryReader 量到欄位的實際可用高度（已扣掉 section header）
                     GeometryReader { colGeo in
                         ScrollView(.horizontal, showsIndicators: false) {
@@ -168,7 +167,6 @@ private struct CakeOrdersSection: View {
                     }
                 }
                 .background(Color.white)
-            }
         }
         // Sheet 在最外層，LazyHStack 的欄位滑出畫面也不會關掉
         .sheet(isPresented: $showingAddReservation) {

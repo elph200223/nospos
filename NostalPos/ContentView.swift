@@ -217,8 +217,6 @@ struct ContentView: View {
                     card("外帶")
                 }
                 
-                TodoSection()
-
                 HStack(spacing: 12) {
                     Button(action: onTapAdmin) {
                         Text("後台管理")
@@ -229,7 +227,7 @@ struct ContentView: View {
                             .foregroundColor(.white)
                             .cornerRadius(10)
                     }
-                    
+
                     Button(action: onTapTodayOrders) {
                         Text("訂單查詢")
                             .font(.subheadline.bold())
@@ -242,7 +240,7 @@ struct ContentView: View {
                                     .stroke(Color.peacock)
                             )
                     }
-                    
+
                     Button(action: onTapCloseShift) {
                         Text("關帳")
                             .font(.subheadline.bold())
@@ -258,8 +256,11 @@ struct ContentView: View {
                 }
                 .padding(.top, 4)
                 .padding(.horizontal, 6)
-                
-                Spacer()
+
+                ScrollView {
+                    TodoSection()
+                }
+                .frame(maxHeight: .infinity)
             }
             .padding(.horizontal, 12)
             .padding(.top, 10)
