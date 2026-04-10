@@ -105,6 +105,8 @@ final class APIClient {
     static let shared = APIClient()
     private init() {}
 
+    private var cachedMenu: MenuResponse?
+
     // ⚠️ 這裡填你的 GAS Web App URL（不要帶 ?action）
     private let baseURLString =
     "https://script.google.com/macros/s/AKfycbxKvvyOh3V31Gf_-EsyE1rWcPNwmLXl1MZ3YnihCYpBcON4gVD4aQGgkl3c4Kouow3PNw/exec"
@@ -239,10 +241,13 @@ final class APIClient {
         }
     }
 
-    // MARK: - 取得菜單（GET getMenu）
+    // MARK: - 取得菜單（GET getMenu，有快取）
 
-    func fetchMenu() async throws -> MenuResponse {
-        try await getJSON(action: "getMenu", timeout: 15, as: MenuResponse.self)
+    func fetchMenu(forceRefresh: Bool = false) async throws -> MenuResponse {
+        if !forceRefresh, let cached = cachedMenu { return cached }
+        let result = try await getJSON(action: "getMenu", timeout: 15, as: MenuResponse.self)
+        cachedMenu = result
+        return result
     }
 
     // MARK: - Line Pay Offline：掃碼付款
@@ -739,6 +744,7 @@ extension APIClient {
         let children: Int
         let note: String
         let status: String
+        let preorderJSON: String
 
         init(from r: Reservation) {
             id       = r.id.uuidString
@@ -751,6 +757,7 @@ extension APIClient {
             children = r.children
             note     = r.note
             status   = r.status.rawValue
+            preorderJSON = (try? String(data: JSONEncoder().encode(r.preorderItems), encoding: .utf8)) ?? "[]"
         }
     }
 
@@ -794,6 +801,7 @@ extension APIClient {
             let children: Int
             let note: String
             let status: String
+            let preorderJSON: String?
 
             func toReservation() -> Reservation? {
                 guard let uuid = UUID(uuidString: id) else { return nil }
@@ -809,9 +817,14 @@ extension APIClient {
                 case "noShow":  s = .noShow
                 default:        s = .pending
                 }
+                var preorder: [PreorderItem] = []
+                if let json = preorderJSON, let data = json.data(using: .utf8) {
+                    preorder = (try? JSONDecoder().decode([PreorderItem].self, from: data)) ?? []
+                }
                 return Reservation(id: uuid, date: date, time: time, name: name,
                                    title: t, phone: phone, adults: adults,
-                                   children: children, note: note, status: s)
+                                   children: children, note: note, status: s,
+                                   preorderItems: preorder)
             }
         }
     }

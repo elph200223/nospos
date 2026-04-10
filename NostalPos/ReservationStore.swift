@@ -5,6 +5,13 @@
 
 import Foundation
 
+struct PreorderItem: Codable, Identifiable, Equatable {
+    var name: String
+    var price: Int
+    var quantity: Int
+    var id: String { name }
+}
+
 enum ReservationTitle: String, Codable, CaseIterable {
     case mr   = "先生"
     case ms   = "小姐"
@@ -28,27 +35,30 @@ struct Reservation: Identifiable, Codable {
     var children: Int
     var note: String
     var status: ReservationStatus
+    var preorderItems: [PreorderItem]
 
     init(id: UUID, date: String, time: String, name: String, title: ReservationTitle,
-         phone: String, adults: Int, children: Int, note: String, status: ReservationStatus = .pending) {
+         phone: String, adults: Int, children: Int, note: String,
+         status: ReservationStatus = .pending, preorderItems: [PreorderItem] = []) {
         self.id = id; self.date = date; self.time = time; self.name = name
         self.title = title; self.phone = phone; self.adults = adults
         self.children = children; self.note = note; self.status = status
+        self.preorderItems = preorderItems
     }
 
-    // 舊資料沒有 status 欄位時，預設 .pending
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        id       = try c.decode(UUID.self,              forKey: .id)
-        date     = try c.decode(String.self,            forKey: .date)
-        time     = try c.decode(String.self,            forKey: .time)
-        name     = try c.decode(String.self,            forKey: .name)
-        title    = try c.decode(ReservationTitle.self,  forKey: .title)
-        phone    = try c.decode(String.self,            forKey: .phone)
-        adults   = try c.decode(Int.self,               forKey: .adults)
-        children = try c.decode(Int.self,               forKey: .children)
-        note     = try c.decode(String.self,            forKey: .note)
-        status   = try c.decodeIfPresent(ReservationStatus.self, forKey: .status) ?? .pending
+        id           = try c.decode(UUID.self,              forKey: .id)
+        date         = try c.decode(String.self,            forKey: .date)
+        time         = try c.decode(String.self,            forKey: .time)
+        name         = try c.decode(String.self,            forKey: .name)
+        title        = try c.decode(ReservationTitle.self,  forKey: .title)
+        phone        = try c.decode(String.self,            forKey: .phone)
+        adults       = try c.decode(Int.self,               forKey: .adults)
+        children     = try c.decode(Int.self,               forKey: .children)
+        note         = try c.decode(String.self,            forKey: .note)
+        status       = try c.decodeIfPresent(ReservationStatus.self,  forKey: .status)       ?? .pending
+        preorderItems = try c.decodeIfPresent([PreorderItem].self,    forKey: .preorderItems) ?? []
     }
 }
 

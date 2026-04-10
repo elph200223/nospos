@@ -5,12 +5,6 @@
 
 import SwiftUI
 
-// 讓左滑刪除能鎖定外層水平 ScrollView，避免手勢衝突（singleton 避免 LazyHStack 環境丟失）
-private class SwipeCoordinator: ObservableObject {
-    static let shared = SwipeCoordinator()
-    private init() {}
-    @Published var isSwiping = false
-}
 
 // MARK: - 主控台（未選桌時顯示）
 
@@ -31,7 +25,6 @@ private struct CakeOrdersSection: View {
     @State private var isLoading = false
     @State private var errorMsg: String? = nil
     @ObservedObject private var reservationStore = ReservationStore.shared
-    @ObservedObject private var swipeCoordinator = SwipeCoordinator.shared
 
     // Sheet 統一在此層管理，避免 LazyHStack 銷毀欄位時 sheet 被關掉
     @State private var addReservationPresetDate: Date = Date()
@@ -152,7 +145,6 @@ private struct CakeOrdersSection: View {
                             }
                             .frame(minHeight: colGeo.size.height, alignment: .top)
                         }
-                        .scrollDisabled(swipeCoordinator.isSwiping)
                         .onAppear { proxy.scrollTo(todayKey, anchor: .leading) }
                     }
                 }
@@ -385,16 +377,14 @@ private struct CakeOrderRow: View {
     }
 }
 
-// MARK: - 訂位卡片（左滑顯示刪除）
+// MARK: - 訂位卡片（長按刪除）
 
 private struct ReservationInlineRow: View {
     let reservation: Reservation
     let onEdit: (Reservation) -> Void
     @ObservedObject private var store = ReservationStore.shared
     @ObservedObject private var blacklist = BlacklistStore.shared
-    @ObservedObject private var swipeCoordinator = SwipeCoordinator.shared
-    @State private var swipeOffset: CGFloat = 0
-    private let deleteWidth: CGFloat = 70
+    @State private var showDeleteConfirm = false
 
     private var isDone: Bool { reservation.status == .arrived || reservation.status == .noShow }
 
@@ -403,131 +393,91 @@ private struct ReservationInlineRow: View {
     }
 
     var body: some View {
-        ZStack(alignment: .trailing) {
-            // 底層：刪除按鈕
-            Button {
-                withAnimation(.easeOut(duration: 0.15)) { swipeOffset = 0 }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
-                    store.delete(id: reservation.id)
+        VStack(alignment: .leading, spacing: 0) {
+            // 文字區（點此進編輯，長按刪除）
+            VStack(alignment: .leading, spacing: 3) {
+                Text(reservation.time)
+                    .font(.subheadline)
+                    .foregroundColor(isDone ? .secondary : .peacock)
+                    .strikethrough(isDone)
+                Text(nameDisplay)
+                    .font(.subheadline)
+                    .foregroundColor(isDone ? .secondary : .primary)
+                    .strikethrough(isDone)
+                Text("大 \(reservation.adults)・小 \(reservation.children)")
+                    .font(.subheadline).foregroundColor(.secondary)
+                    .strikethrough(isDone)
+                if !reservation.phone.isEmpty {
+                    Text(reservation.phone).font(.caption).foregroundColor(.secondary)
                 }
-            } label: {
-                Image(systemName: "trash")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(width: deleteWidth)
-                    .frame(maxHeight: .infinity)
-                    .background(Color.red)
-                    .cornerRadius(10)
-            }
-            .buttonStyle(.plain)
-
-            // 上層：白色卡片
-            VStack(alignment: .leading, spacing: 0) {
-                // 文字區（點此進編輯）
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(reservation.time)
-                        .font(.subheadline)
-                        .foregroundColor(isDone ? .secondary : .peacock)
-                        .strikethrough(isDone)
-                    Text(nameDisplay)
-                        .font(.subheadline)
-                        .foregroundColor(isDone ? .secondary : .primary)
-                        .strikethrough(isDone)
-                    Text("大 \(reservation.adults)・小 \(reservation.children)")
-                        .font(.subheadline).foregroundColor(.secondary)
-                        .strikethrough(isDone)
-                    if !reservation.phone.isEmpty {
-                        Text(reservation.phone).font(.caption).foregroundColor(.secondary)
-                    }
-                    if !reservation.note.isEmpty {
-                        Text(reservation.note).font(.caption).foregroundColor(isDone ? .secondary : .orange)
-                    }
+                if !reservation.note.isEmpty {
+                    Text(reservation.note).font(.caption).foregroundColor(isDone ? .secondary : .orange)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 10)
-                .padding(.top, 9)
-                .padding(.bottom, 7)
-                .contentShape(Rectangle())
-                .onTapGesture { if !isDone { onEdit(reservation) } }
-
-                // 到達 / No Show
-                HStack(spacing: 0) {
-                    Button {
-                        var u = reservation
-                        u.status = .arrived
-                        store.update(u)
-                    } label: {
-                        Text("到達")
-                            .font(.caption.bold())
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 5)
-                            .background(reservation.status == .arrived
-                                ? Color.green.opacity(0.25)
-                                : Color(red: 0.18, green: 0.72, blue: 0.35))
-                            .foregroundColor(reservation.status == .arrived
-                                ? Color.secondary
-                                : .white)
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(isDone)
-
-                    Rectangle().fill(Color(white: 0.88)).frame(width: 1)
-
-                    Button {
-                        var u = reservation
-                        u.status = .noShow
-                        store.update(u)
-                        if !reservation.phone.isEmpty {
-                            blacklist.add(phone: reservation.phone)
-                        }
-                    } label: {
-                        Text("No Show")
-                            .font(.caption.bold())
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 5)
-                            .background(reservation.status == .noShow
-                                ? Color.red.opacity(0.25)
-                                : Color(red: 0.95, green: 0.23, blue: 0.23))
-                            .foregroundColor(reservation.status == .noShow
-                                ? Color.secondary
-                                : .white)
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(isDone)
+                if !reservation.preorderItems.isEmpty {
+                    Text(reservation.preorderItems.map { "\($0.name)×\($0.quantity)" }.joined(separator: "、"))
+                        .font(.caption)
+                        .foregroundColor(.peacock.opacity(isDone ? 0.4 : 0.85))
                 }
             }
-            .background(isDone ? Color(white: 0.96) : Color.white)
-            .cornerRadius(10)
-            .shadow(color: .black.opacity(isDone ? 0.02 : 0.06), radius: 3, x: 0, y: 1)
-            .offset(x: swipeOffset)
-            .highPriorityGesture(
-                DragGesture(minimumDistance: 5)
-                    .onChanged { v in
-                        guard abs(v.translation.width) > abs(v.translation.height) else { return }
-                        // 手勢開始時鎖外層水平 ScrollView
-                        if !swipeCoordinator.isSwiping {
-                            swipeCoordinator.isSwiping = true
-                        }
-                        if v.translation.width < 0 {
-                            swipeOffset = max(v.translation.width, -deleteWidth)
-                        } else {
-                            swipeOffset = min(0, swipeOffset + v.translation.width)
-                        }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 10)
+            .padding(.top, 9)
+            .padding(.bottom, 7)
+            .contentShape(Rectangle())
+            .onTapGesture { if !isDone { onEdit(reservation) } }
+            .onLongPressGesture { showDeleteConfirm = true }
+
+            // 到達 / No Show
+            HStack(spacing: 0) {
+                Button {
+                    var u = reservation
+                    u.status = reservation.status == .arrived ? .pending : .arrived
+                    store.update(u)
+                } label: {
+                    Text("到達")
+                        .font(.caption.bold())
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                        .background(isDone ? Color(white: 0.88) : Color(red: 0.68, green: 0.88, blue: 0.72))
+                        .foregroundColor(isDone ? Color(white: 0.55) : .white)
+                }
+                .buttonStyle(.plain)
+
+                Rectangle().fill(Color(white: 0.88)).frame(width: 1)
+
+                Button {
+                    var u = reservation
+                    u.status = reservation.status == .noShow ? .pending : .noShow
+                    store.update(u)
+                    if u.status == .noShow && !reservation.phone.isEmpty {
+                        blacklist.add(phone: reservation.phone)
                     }
-                    .onEnded { v in
-                        swipeCoordinator.isSwiping = false
-                        withAnimation(.spring(response: 0.28, dampingFraction: 0.8)) {
-                            swipeOffset = v.translation.width < -(deleteWidth / 2) ? -deleteWidth : 0
-                        }
-                    }
-            )
+                } label: {
+                    Text("No Show")
+                        .font(.caption.bold())
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                        .background(isDone ? Color(white: 0.88) : Color(red: 0.94, green: 0.68, blue: 0.68))
+                        .foregroundColor(isDone ? Color(white: 0.55) : .white)
+                }
+                .buttonStyle(.plain)
+            }
         }
+        .background(isDone ? Color(white: 0.96) : Color.white)
+        .cornerRadius(10)
+        .shadow(color: .black.opacity(isDone ? 0.02 : 0.06), radius: 3, x: 0, y: 1)
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
+        .confirmationDialog("刪除這筆訂位？", isPresented: $showDeleteConfirm, titleVisibility: .visible) {
+            Button("刪除", role: .destructive) {
+                store.delete(id: reservation.id)
+            }
+            Button("取消", role: .cancel) { }
+        }
     }
 }
 
@@ -543,17 +493,39 @@ private struct EditReservationSheet: View {
     @State private var adults: Int
     @State private var children: Int
     @State private var note: String
+    @State private var preorderItems: [PreorderItem]
     @State private var numPadMode: EditNumPadMode = .time
+    @State private var menuCategories: [Category] = []
+    @State private var menuItems: [MenuItem] = []
+    @State private var selectedCategoryId: String? = nil
 
-    enum EditNumPadMode { case time }
+    enum EditNumPadMode { case time, preorder }
 
     init(reservation: Reservation, onSave: @escaping (Reservation) -> Void) {
         self.reservation = reservation
         self.onSave = onSave
-        _timeDigits = State(initialValue: reservation.time.replacingOccurrences(of: ":", with: ""))
-        _adults = State(initialValue: reservation.adults)
-        _children = State(initialValue: reservation.children)
-        _note = State(initialValue: reservation.note)
+        _timeDigits    = State(initialValue: reservation.time.replacingOccurrences(of: ":", with: ""))
+        _adults        = State(initialValue: reservation.adults)
+        _children      = State(initialValue: reservation.children)
+        _note          = State(initialValue: reservation.note)
+        _preorderItems = State(initialValue: reservation.preorderItems)
+    }
+
+    private var filteredMenuItems: [MenuItem] {
+        guard let cid = selectedCategoryId else { return [] }
+        return menuItems.filter { $0.categoryId == cid }
+    }
+    private var preorderTotal: Int {
+        preorderItems.reduce(0) { $0 + $1.price * $1.quantity }
+    }
+    private func adjustPreorder(item: MenuItem, delta: Int) {
+        if let idx = preorderItems.firstIndex(where: { $0.name == item.name }) {
+            let newQty = preorderItems[idx].quantity + delta
+            if newQty <= 0 { preorderItems.remove(at: idx) }
+            else { preorderItems[idx].quantity = newQty }
+        } else if delta > 0 {
+            preorderItems.append(PreorderItem(name: item.name, price: item.price, quantity: 1))
+        }
     }
 
     private var formattedTime: String {
@@ -623,6 +595,42 @@ private struct EditReservationSheet: View {
 
                         Divider()
 
+                        // 預留品項
+                        HStack(alignment: .top) {
+                            Text("預留").font(.subheadline).foregroundColor(.secondary).frame(width: 44, alignment: .leading)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Button {
+                                    numPadMode = .preorder
+                                } label: {
+                                    HStack {
+                                        if preorderItems.isEmpty {
+                                            Text("點此選擇").foregroundColor(.secondary)
+                                        } else {
+                                            Text("\(preorderItems.count) 項・NT$\(preorderTotal)").foregroundColor(.primary)
+                                        }
+                                        Spacer()
+                                        if numPadMode == .preorder {
+                                            Image(systemName: "chevron.right.circle.fill").foregroundColor(.peacock)
+                                        }
+                                    }
+                                }
+                                if !preorderItems.isEmpty {
+                                    ForEach(preorderItems) { item in
+                                        HStack {
+                                            Text("・\(item.name) × \(item.quantity)")
+                                                .font(.caption).foregroundColor(.secondary)
+                                            Spacer()
+                                            Text("NT$\(item.price * item.quantity)")
+                                                .font(.caption).foregroundColor(.secondary)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 20).padding(.vertical, 14)
+
+                        Divider()
+
                         // 儲存
                         Button {
                             var updated = reservation
@@ -630,6 +638,7 @@ private struct EditReservationSheet: View {
                             updated.adults = adults
                             updated.children = children
                             updated.note = note
+                            updated.preorderItems = preorderItems
                             onSave(updated)
                             dismiss()
                         } label: {
@@ -651,44 +660,115 @@ private struct EditReservationSheet: View {
 
             Divider()
 
-            // 右欄：時間數字鍵盤
+            // 右欄：時間 / 品項
             VStack(spacing: 0) {
-                Text("時間")
-                    .font(.subheadline.bold())
-                    .foregroundColor(.peacock)
-                    .padding(.vertical, 10)
-                    .frame(maxWidth: .infinity)
-                    .background(Color.posBg)
+                HStack(spacing: 0) {
+                    Button {
+                        numPadMode = .time
+                    } label: {
+                        Text("時間")
+                            .font(.subheadline.bold())
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(numPadMode == .time ? Color.white : Color.posBg)
+                            .foregroundColor(numPadMode == .time ? .peacock : .secondary)
+                    }
+                    .buttonStyle(.plain)
+                    Button {
+                        numPadMode = .preorder
+                    } label: {
+                        Text("品項")
+                            .font(.subheadline.bold())
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(numPadMode == .preorder ? Color.white : Color.posBg)
+                            .foregroundColor(numPadMode == .preorder ? .peacock : .secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .background(Color.posBg)
 
                 Divider()
 
-                Text(timeDigits.isEmpty ? "—" : formattedTime)
-                    .font(.system(size: 32, weight: .bold, design: .monospaced))
-                    .foregroundColor(.peacock)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-
-                Divider()
-
-                let keys = ["1","2","3","4","5","6","7","8","9","C","0","⌫"]
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
-                    ForEach(keys, id: \.self) { key in
-                        Button { handleTimeKey(key) } label: {
-                            Text(key)
-                                .font(.title2.bold())
-                                .frame(maxWidth: .infinity, minHeight: 60)
-                                .background(key == "C" ? Color.red.opacity(0.1) : Color.gray.opacity(0.1))
-                                .foregroundColor(key == "C" ? .red : .primary)
-                                .cornerRadius(10)
+                if numPadMode == .preorder {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 6) {
+                            ForEach(menuCategories) { cat in
+                                Button(cat.name) { selectedCategoryId = cat.categoryId }
+                                    .font(.caption.bold())
+                                    .padding(.horizontal, 10).padding(.vertical, 6)
+                                    .background(selectedCategoryId == cat.categoryId ? Color.peacock : Color.gray.opacity(0.12))
+                                    .foregroundColor(selectedCategoryId == cat.categoryId ? .white : .primary)
+                                    .clipShape(Capsule())
+                                    .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.horizontal, 10).padding(.vertical, 8)
+                    }
+                    Divider()
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            ForEach(filteredMenuItems) { item in
+                                let qty = preorderItems.first(where: { $0.name == item.name })?.quantity ?? 0
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(item.name).font(.subheadline)
+                                        Text("NT$\(item.price)").font(.caption).foregroundColor(.secondary)
+                                    }
+                                    Spacer()
+                                    HStack(spacing: 10) {
+                                        Button { adjustPreorder(item: item, delta: -1) } label: {
+                                            Image(systemName: "minus.circle")
+                                                .foregroundColor(qty > 0 ? .peacock : .gray.opacity(0.3))
+                                        }.disabled(qty == 0)
+                                        Text("\(qty)").font(.subheadline.bold()).frame(minWidth: 24, alignment: .center)
+                                        Button { adjustPreorder(item: item, delta: 1) } label: {
+                                            Image(systemName: "plus.circle").foregroundColor(.peacock)
+                                        }
+                                    }
+                                }
+                                .padding(.horizontal, 12).padding(.vertical, 10)
+                                Divider().padding(.leading, 12)
+                            }
                         }
                     }
-                }
-                .padding(14)
+                    .frame(maxHeight: .infinity)
+                } else {
+                    Text(timeDigits.isEmpty ? "—" : formattedTime)
+                        .font(.system(size: 32, weight: .bold, design: .monospaced))
+                        .foregroundColor(.peacock)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
 
-                Spacer()
+                    Divider()
+
+                    let keys = ["1","2","3","4","5","6","7","8","9","C","0","⌫"]
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
+                        ForEach(keys, id: \.self) { key in
+                            Button { handleTimeKey(key) } label: {
+                                Text(key)
+                                    .font(.title2.bold())
+                                    .frame(maxWidth: .infinity, minHeight: 60)
+                                    .background(key == "C" ? Color.red.opacity(0.1) : Color.gray.opacity(0.1))
+                                    .foregroundColor(key == "C" ? .red : .primary)
+                                    .cornerRadius(10)
+                            }
+                        }
+                    }
+                    .padding(14)
+
+                    Spacer()
+                }
             }
             .frame(width: 260)
             .background(Color.white)
+        }
+        .task {
+            if let menu = try? await APIClient.shared.fetchMenu() {
+                menuCategories = menu.categories.sorted { ($0.sortOrder ?? 0) < ($1.sortOrder ?? 0) }
+                menuItems = menu.items
+                selectedCategoryId = menuCategories.first?.categoryId
+            }
         }
     }
 
@@ -838,12 +918,24 @@ private struct AddReservationSheet: View {
     @State private var adults = 2
     @State private var children = 0
     @State private var note = ""
-    @State private var numPadMode: NumPadMode = .phone  // 右欄目前輸入哪個
+    @State private var numPadMode: NumPadMode = .phone
+    @State private var preorderItems: [PreorderItem] = []
+    @State private var menuCategories: [Category] = []
+    @State private var menuItems: [MenuItem] = []
+    @State private var selectedCategoryId: String? = nil
     @ObservedObject private var blacklist = BlacklistStore.shared
 
-    enum NumPadMode { case phone, time }
+    enum NumPadMode { case phone, time, preorder }
+
 
     private var isPhoneBlacklisted: Bool { blacklist.isBlacklisted(phone) }
+    private var filteredMenuItems: [MenuItem] {
+        guard let cid = selectedCategoryId else { return [] }
+        return menuItems.filter { $0.categoryId == cid }
+    }
+    private var preorderTotal: Int {
+        preorderItems.reduce(0) { $0 + $1.price * $1.quantity }
+    }
 
     init(presetDate: Date = Calendar.current.startOfDay(for: Date()), onSave: @escaping (Reservation) -> Void) {
         self.onSave = onSave
@@ -1008,6 +1100,43 @@ private struct AddReservationSheet: View {
 
                     Divider()
 
+                    // 預留品項
+                    formRow(label: "預留品項") {
+                        Button {
+                            numPadMode = .preorder
+                        } label: {
+                            HStack {
+                                if preorderItems.isEmpty {
+                                    Text("點此選擇").foregroundColor(.secondary)
+                                } else {
+                                    Text("\(preorderItems.count) 項・NT$\(preorderTotal)")
+                                        .foregroundColor(.primary)
+                                }
+                                Spacer()
+                                if numPadMode == .preorder {
+                                    Image(systemName: "chevron.right.circle.fill")
+                                        .foregroundColor(.peacock)
+                                }
+                            }
+                        }
+                        if !preorderItems.isEmpty {
+                            VStack(alignment: .leading, spacing: 4) {
+                                ForEach(preorderItems) { item in
+                                    HStack {
+                                        Text("・\(item.name) × \(item.quantity)")
+                                            .font(.caption).foregroundColor(.secondary)
+                                        Spacer()
+                                        Text("NT$\(item.price * item.quantity)")
+                                            .font(.caption).foregroundColor(.secondary)
+                                    }
+                                }
+                            }
+                            .padding(.top, 4)
+                        }
+                    }
+
+                    Divider()
+
                     // 儲存按鈕（欄位填完後自然在下方）
                     Button {
                         let r = Reservation(
@@ -1019,7 +1148,8 @@ private struct AddReservationSheet: View {
                             phone: phone,
                             adults: adults,
                             children: children,
-                            note: note.trimmingCharacters(in: .whitespaces)
+                            note: note.trimmingCharacters(in: .whitespaces),
+                            preorderItems: preorderItems
                         )
                         onSave(r)
                         dismiss()
@@ -1046,13 +1176,70 @@ private struct AddReservationSheet: View {
             VStack(spacing: 0) {
                 // 模式切換
                 HStack(spacing: 0) {
-                    modeTab("電話", active: numPadMode == .phone) { numPadMode = .phone }
-                    modeTab("時間", active: numPadMode == .time)  { numPadMode = .time }
+                    modeTab("電話", active: numPadMode == .phone)    { numPadMode = .phone }
+                    modeTab("時間", active: numPadMode == .time)     { numPadMode = .time }
+                    modeTab("品項", active: numPadMode == .preorder) { numPadMode = .preorder }
                 }
                 .background(Color.posBg)
 
                 Divider()
 
+                if numPadMode == .preorder {
+                    // 品項選擇模式
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 6) {
+                            ForEach(menuCategories) { cat in
+                                Button(cat.name) { selectedCategoryId = cat.categoryId }
+                                    .font(.caption.bold())
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(selectedCategoryId == cat.categoryId ? Color.peacock : Color.gray.opacity(0.12))
+                                    .foregroundColor(selectedCategoryId == cat.categoryId ? .white : .primary)
+                                    .clipShape(Capsule())
+                                    .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 8)
+                    }
+                    Divider()
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            ForEach(filteredMenuItems) { item in
+                                let qty = preorderItems.first(where: { $0.name == item.name })?.quantity ?? 0
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(item.name).font(.subheadline)
+                                        Text("NT$\(item.price)").font(.caption).foregroundColor(.secondary)
+                                    }
+                                    Spacer()
+                                    HStack(spacing: 10) {
+                                        Button {
+                                            adjustPreorder(item: item, delta: -1)
+                                        } label: {
+                                            Image(systemName: "minus.circle")
+                                                .foregroundColor(qty > 0 ? .peacock : .gray.opacity(0.3))
+                                        }
+                                        .disabled(qty == 0)
+                                        Text("\(qty)")
+                                            .font(.subheadline.bold())
+                                            .frame(minWidth: 24, alignment: .center)
+                                        Button {
+                                            adjustPreorder(item: item, delta: 1)
+                                        } label: {
+                                            Image(systemName: "plus.circle")
+                                                .foregroundColor(.peacock)
+                                        }
+                                    }
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 10)
+                                Divider().padding(.leading, 12)
+                            }
+                        }
+                    }
+                    .frame(maxHeight: .infinity)
+                } else {
                 // 目前值顯示
                 let currentValue = numPadMode == .phone ? phone : (timeDigits.isEmpty ? "" : formattedTime)
                 Text(currentValue.isEmpty ? "—" : currentValue)
@@ -1080,11 +1267,19 @@ private struct AddReservationSheet: View {
                 .padding(14)
 
                 Spacer()
+                }
             }
             .frame(width: 260)
             .background(Color.white)
         }
         .background(Color.white)
+        .task {
+            if let menu = try? await APIClient.shared.fetchMenu() {
+                menuCategories = menu.categories.sorted { ($0.sortOrder ?? 0) < ($1.sortOrder ?? 0) }
+                menuItems = menu.items
+                selectedCategoryId = menuCategories.first?.categoryId
+            }
+        }
     }
 
     private func handleKey(_ key: String) {
@@ -1120,6 +1315,19 @@ private struct AddReservationSheet: View {
                 default: break
                 }
             }
+        }
+    }
+
+    private func adjustPreorder(item: MenuItem, delta: Int) {
+        if let idx = preorderItems.firstIndex(where: { $0.name == item.name }) {
+            let newQty = preorderItems[idx].quantity + delta
+            if newQty <= 0 {
+                preorderItems.remove(at: idx)
+            } else {
+                preorderItems[idx].quantity = newQty
+            }
+        } else if delta > 0 {
+            preorderItems.append(PreorderItem(name: item.name, price: item.price, quantity: 1))
         }
     }
 

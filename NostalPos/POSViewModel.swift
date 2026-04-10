@@ -439,7 +439,7 @@ class POSViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
         do {
-            let menu = try await APIClient.shared.fetchMenu()
+            let menu = try await APIClient.shared.fetchMenu(forceRefresh: true)
             categories = menu.categories.sorted { ($0.sortOrder ?? 0) < ($1.sortOrder ?? 0) }
             items = menu.items
             categoryAddOns = menu.categoryAddOns

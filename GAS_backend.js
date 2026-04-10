@@ -104,6 +104,7 @@ function initPOSDatabase() {
     'Children',
     'Note',
     'Status',
+    'PreorderJSON',
     'CreatedAt'
   ]);
 
@@ -2044,8 +2045,9 @@ function getReservations_() {
   var idxPhone    = header.indexOf('Phone');
   var idxAdults   = header.indexOf('Adults');
   var idxChildren = header.indexOf('Children');
-  var idxNote     = header.indexOf('Note');
-  var idxStatus   = header.indexOf('Status');
+  var idxNote         = header.indexOf('Note');
+  var idxStatus       = header.indexOf('Status');
+  var idxPreorderJSON = header.indexOf('PreorderJSON');
 
   var tz = ss.getSpreadsheetTimeZone();
   var reservations = [];
@@ -2070,8 +2072,9 @@ function getReservations_() {
       phone:    String(row[idxPhone]    || ''),
       adults:   Number(row[idxAdults])  || 0,
       children: Number(row[idxChildren])|| 0,
-      note:     String(row[idxNote]     || ''),
-      status:   String(row[idxStatus]   || 'pending')
+      note:         String(row[idxNote]         || ''),
+      status:       String(row[idxStatus]       || 'pending'),
+      preorderJSON: idxPreorderJSON >= 0 ? String(row[idxPreorderJSON] || '[]') : '[]'
     });
   }
   return { ok: true, reservations: reservations };
@@ -2087,20 +2090,29 @@ function createReservation_(data) {
   var now = new Date();
   var tz  = ss.getSpreadsheetTimeZone();
 
-  sheet.appendRow([
-    id,
-    String(r.date     || ''),
-    String(r.time     || ''),
-    String(r.name     || ''),
-    String(r.title    || ''),
-    String(r.phone    || ''),
-    Number(r.adults)  || 0,
-    Number(r.children)|| 0,
-    String(r.note     || ''),
-    String(r.status   || 'pending'),
-    Utilities.formatDate(now, tz, 'yyyy-MM-dd HH:mm:ss')
-  ]);
+  // 動態查 header，避免欄位順序不同造成資料寫錯欄
+  var header = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  var newRow = new Array(header.length).fill('');
 
+  function set_(colName, value) {
+    var idx = header.indexOf(colName);
+    if (idx >= 0) newRow[idx] = value;
+  }
+
+  set_('ReservationId', id);
+  set_('Date',          String(r.date     || ''));
+  set_('Time',          String(r.time     || ''));
+  set_('Name',          String(r.name     || ''));
+  set_('Title',         String(r.title    || ''));
+  set_('Phone',         String(r.phone    || ''));
+  set_('Adults',        Number(r.adults)  || 0);
+  set_('Children',      Number(r.children)|| 0);
+  set_('Note',          String(r.note         || ''));
+  set_('Status',        String(r.status       || 'pending'));
+  set_('PreorderJSON',  String(r.preorderJSON || '[]'));
+  set_('CreatedAt',     Utilities.formatDate(now, tz, 'yyyy-MM-dd HH:mm:ss'));
+
+  sheet.appendRow(newRow);
   return { ok: true, id: id };
 }
 
@@ -2123,21 +2135,23 @@ function updateReservation_(data) {
   var idxPhone    = header.indexOf('Phone');
   var idxAdults   = header.indexOf('Adults');
   var idxChildren = header.indexOf('Children');
-  var idxNote     = header.indexOf('Note');
-  var idxStatus   = header.indexOf('Status');
+  var idxNote         = header.indexOf('Note');
+  var idxStatus       = header.indexOf('Status');
+  var idxPreorderJSON = header.indexOf('PreorderJSON');
 
   for (var i = 1; i < values.length; i++) {
     if (String(values[i][idxId] || '').trim() !== id) continue;
     var row = i + 1;
-    if (r.date     !== undefined) sheet.getRange(row, idxDate     + 1).setValue(r.date);
-    if (r.time     !== undefined) sheet.getRange(row, idxTime     + 1).setValue(r.time);
-    if (r.name     !== undefined) sheet.getRange(row, idxName     + 1).setValue(r.name);
-    if (r.title    !== undefined) sheet.getRange(row, idxTitle    + 1).setValue(r.title);
-    if (r.phone    !== undefined) sheet.getRange(row, idxPhone    + 1).setValue(r.phone);
-    if (r.adults   !== undefined) sheet.getRange(row, idxAdults   + 1).setValue(Number(r.adults));
-    if (r.children !== undefined) sheet.getRange(row, idxChildren + 1).setValue(Number(r.children));
-    if (r.note     !== undefined) sheet.getRange(row, idxNote     + 1).setValue(r.note);
-    if (r.status   !== undefined) sheet.getRange(row, idxStatus   + 1).setValue(r.status);
+    if (r.date         !== undefined) sheet.getRange(row, idxDate         + 1).setValue(r.date);
+    if (r.time         !== undefined) sheet.getRange(row, idxTime         + 1).setValue(r.time);
+    if (r.name         !== undefined) sheet.getRange(row, idxName         + 1).setValue(r.name);
+    if (r.title        !== undefined) sheet.getRange(row, idxTitle        + 1).setValue(r.title);
+    if (r.phone        !== undefined) sheet.getRange(row, idxPhone        + 1).setValue(r.phone);
+    if (r.adults       !== undefined) sheet.getRange(row, idxAdults       + 1).setValue(Number(r.adults));
+    if (r.children     !== undefined) sheet.getRange(row, idxChildren     + 1).setValue(Number(r.children));
+    if (r.note         !== undefined) sheet.getRange(row, idxNote         + 1).setValue(r.note);
+    if (r.status       !== undefined) sheet.getRange(row, idxStatus       + 1).setValue(r.status);
+    if (r.preorderJSON !== undefined && idxPreorderJSON >= 0) sheet.getRange(row, idxPreorderJSON + 1).setValue(r.preorderJSON);
     return { ok: true, id: id };
   }
   return { ok: false, error: 'Reservation not found: ' + id };
@@ -2186,6 +2200,15 @@ function mobilePage_() {
     + '.tab-content { display: none; padding: 16px; padding-bottom: 100px; }\n'
     + '.tab-content.active { display: block; }\n'
     + '.section-header { font-size: 13px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 0 8px; padding: 0 4px; }\n'
+    + '.date-strip { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 12px; scrollbar-width: none; }\n'
+    + '.date-strip::-webkit-scrollbar { display: none; }\n'
+    + '.date-tile { flex: 0 0 58px; display: flex; flex-direction: column; align-items: center; padding: 10px 4px 8px; border-radius: 12px; background: #fff; border: 2px solid transparent; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.07); gap: 4px; }\n'
+    + '.date-tile.active { border-color: #007aff; background: #e8f0fe; }\n'
+    + '.date-tile.today .tile-day { color: #007aff; }\n'
+    + '.tile-day { font-size: 11px; font-weight: 600; color: #8e8e93; }\n'
+    + '.tile-date { font-size: 17px; font-weight: 700; color: #1c1c1e; }\n'
+    + '.tile-count { font-size: 12px; font-weight: 700; min-width: 20px; text-align: center; padding: 1px 5px; border-radius: 10px; background: #e5e5ea; color: #8e8e93; }\n'
+    + '.tile-count.has-res { background: #007aff; color: #fff; }\n'
     + '.card { background: #fff; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }\n'
     + '.card-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }\n'
     + '.card-sub { font-size: 14px; color: #3c3c43; margin-bottom: 2px; }\n'
@@ -2346,6 +2369,7 @@ function mobilePage_() {
     + 'fetch(GAS_URL + "?action=getBlacklist").then(function(r){return r.json();}).then(function(res){ blacklistPhones = res.phones || []; }).catch(function(){});\n'
     + '\n'
     + 'var allReservations = [];\n'
+    + 'var selectedDate = "";\n'
     + 'function loadReservations() {\n'
     + '  document.getElementById("res-list").innerHTML = \'<div class="loading">載入中…</div>\';\n'
     + '  gasGet("getReservations").then(function(res) {\n'
@@ -2354,38 +2378,61 @@ function mobilePage_() {
     + '  }).catch(function(){ document.getElementById("res-list").innerHTML = \'<div class="empty">載入失敗</div>\'; });\n'
     + '}\n'
     + '\n'
+    + 'function fmtDate(d) { return d.toISOString().substring(0,10); }\n'
+    + 'function selectDate(date) { selectedDate = date; renderReservations(); }\n'
+    + '\n'
     + 'function renderReservations() {\n'
     + '  var today = new Date(); today.setHours(0,0,0,0);\n'
-    + '  var cutoff = new Date(today); cutoff.setDate(cutoff.getDate() + 30);\n'
-    + '  var cutoffStr = cutoff.toISOString().substring(0,10);\n'
-    + '  var todayStr = today.toISOString().substring(0,10);\n'
-    + '  var upcoming = allReservations\n'
-    + '    .filter(function(r){ return r.date >= todayStr && r.date <= cutoffStr; })\n'
-    + '    .sort(function(a,b){ return (a.date+a.time) < (b.date+b.time) ? -1 : 1; });\n'
-    + '  if (!upcoming.length) { document.getElementById("res-list").innerHTML = \'<div class="empty">未來 30 天無訂位</div>\'; return; }\n'
+    + '  var todayStr = fmtDate(today);\n'
+    + '  if (!selectedDate || selectedDate < todayStr) selectedDate = todayStr;\n'
+    + '  var days = ["日","一","二","三","四","五","六"];\n'
+    + '  // 建立未來 30 天的 byDate\n'
     + '  var byDate = {};\n'
-    + '  upcoming.forEach(function(r){ if (!byDate[r.date]) byDate[r.date]=[]; byDate[r.date].push(r); });\n'
-    + '  var html = "";\n'
+    + '  for (var i = 0; i < 30; i++) {\n'
+    + '    var d = new Date(today); d.setDate(d.getDate() + i);\n'
+    + '    byDate[fmtDate(d)] = [];\n'
+    + '  }\n'
+    + '  allReservations.forEach(function(r) {\n'
+    + '    if (byDate[r.date] !== undefined) byDate[r.date].push(r);\n'
+    + '  });\n'
+    + '  // 日期橫列\n'
+    + '  var stripHtml = \'<div class="date-strip" id="date-strip">\';\n'
     + '  Object.keys(byDate).sort().forEach(function(date) {\n'
     + '    var d = new Date(date + "T00:00:00");\n'
-    + '    var days = ["日","一","二","三","四","五","六"];\n'
-    + '    var label = (d.getMonth()+1) + "/" + d.getDate() + "（" + days[d.getDay()] + "）";\n'
-    + '    html += \'<div class="section-header">\' + label + "</div>";\n'
-    + '    byDate[date].forEach(function(r) {\n'
-    + '      var statusClass = r.status === "arrived" ? "arrived" : r.status === "noShow" ? "noshow" : "";\n'
-    + '      html += \'<div class="card" id="res-\' + r.id + \'">\' ;\n'
-    + '      html += \'<div class="card-title">\' + r.time + "　" + r.name + r.title + "</div>";\n'
-    + '      html += \'<div class="card-sub">大人 \' + r.adults + "・小孩 " + r.children + "</div>";\n'
-    + '      if (r.phone) html += \'<div class="card-meta">\' + r.phone + "</div>";\n'
-    + '      if (r.note)  html += \'<div class="card-note">\' + r.note  + "</div>";\n'
-    + '      html += \'<div class="status-btns">\';\n'
-    + '      html += \'<button class="status-btn \' + (r.status==="arrived"?"arrived":"") + \'" onclick="setStatus(\\\'\' + r.id + \'\\\',\\\'arrived\\\')">到達</button>\';\n'
-    + '      html += \'<button class="status-btn \' + (r.status==="noShow"?"noshow":"") + \'" onclick="setStatus(\\\'\' + r.id + \'\\\',\\\'noShow\\\')">No Show</button>\';\n'
-    + '      html += \'<button class="status-btn delete-btn" onclick="deleteReservation(\\\'\' + r.id + \'\\\')">刪除</button>\';\n'
-    + '      html += "</div></div>";\n'
-    + '    });\n'
+    + '    var count = byDate[date].length;\n'
+    + '    var isToday = date === todayStr;\n'
+    + '    var isActive = date === selectedDate;\n'
+    + '    stripHtml += \'<div class="date-tile\' + (isToday?" today":"") + (isActive?" active":"") + \'" onclick="selectDate(\\\'\' + date + \'\\\')">\';\n'
+    + '    stripHtml += \'<div class="tile-day">\' + days[d.getDay()] + "</div>";\n'
+    + '    stripHtml += \'<div class="tile-date">\' + d.getDate() + "</div>";\n'
+    + '    stripHtml += \'<div class="tile-count\' + (count>0?" has-res":"") + \'">\' + (count||"·") + "</div>";\n'
+    + '    stripHtml += "</div>";\n'
     + '  });\n'
-    + '  document.getElementById("res-list").innerHTML = html;\n'
+    + '  stripHtml += "</div>";\n'
+    + '  // 選中日的訂位列表\n'
+    + '  var listHtml = "";\n'
+    + '  var dayRes = (byDate[selectedDate] || []).sort(function(a,b){ return a.time < b.time ? -1 : 1; });\n'
+    + '  if (!dayRes.length) {\n'
+    + '    listHtml = \'<div class="empty" style="padding:24px 0">當天無訂位</div>\';\n'
+    + '  } else {\n'
+    + '    dayRes.forEach(function(r) {\n'
+    + '      var done = r.status === "arrived" || r.status === "noShow";\n'
+    + '      listHtml += \'<div class="card" id="res-\' + r.id + \'" style="\' + (done?"opacity:0.55":"") + \'">\' ;\n'
+    + '      listHtml += \'<div class="card-title">\' + r.time + "　" + r.name + r.title + "</div>";\n'
+    + '      listHtml += \'<div class="card-sub">大人 \' + r.adults + "・小孩 " + r.children + "</div>";\n'
+    + '      if (r.phone) listHtml += \'<div class="card-meta">\' + r.phone + "</div>";\n'
+    + '      if (r.note)  listHtml += \'<div class="card-note">\' + r.note  + "</div>";\n'
+    + '      listHtml += \'<div class="status-btns">\';\n'
+    + '      listHtml += \'<button class="status-btn \' + (r.status==="arrived"?"arrived":"") + \'" onclick="setStatus(\\\'\' + r.id + \'\\\',\\\'arrived\\\')">到達</button>\';\n'
+    + '      listHtml += \'<button class="status-btn \' + (r.status==="noShow"?"noshow":"") + \'" onclick="setStatus(\\\'\' + r.id + \'\\\',\\\'noShow\\\')">No Show</button>\';\n'
+    + '      listHtml += \'<button class="status-btn delete-btn" onclick="deleteReservation(\\\'\' + r.id + \'\\\')">刪除</button>\';\n'
+    + '      listHtml += "</div></div>";\n'
+    + '    });\n'
+    + '  }\n'
+    + '  document.getElementById("res-list").innerHTML = stripHtml + listHtml;\n'
+    + '  // 自動捲到選中的日期格\n'
+    + '  var active = document.querySelector(".date-tile.active");\n'
+    + '  if (active) active.scrollIntoView({inline:"center", block:"nearest", behavior:"smooth"});\n'
     + '}\n'
     + '\n'
     + 'function setStatus(id, status) {\n'
