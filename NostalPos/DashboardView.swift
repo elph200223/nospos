@@ -489,6 +489,9 @@ private struct EditReservationSheet: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var store = ReservationStore.shared
 
+    @State private var name: String
+    @State private var title: ReservationTitle
+    @State private var phone: String
     @State private var timeDigits: String
     @State private var adults: Int
     @State private var children: Int
@@ -504,6 +507,9 @@ private struct EditReservationSheet: View {
     init(reservation: Reservation, onSave: @escaping (Reservation) -> Void) {
         self.reservation = reservation
         self.onSave = onSave
+        _name          = State(initialValue: reservation.name)
+        _title         = State(initialValue: reservation.title)
+        _phone         = State(initialValue: reservation.phone)
         _timeDigits    = State(initialValue: reservation.time.replacingOccurrences(of: ":", with: ""))
         _adults        = State(initialValue: reservation.adults)
         _children      = State(initialValue: reservation.children)
@@ -534,10 +540,6 @@ private struct EditReservationSheet: View {
         return "\(d.prefix(2)):\(d.suffix(2))"
     }
 
-    private var nameDisplay: String {
-        reservation.name + (reservation.title == .none ? "" : " \(reservation.title.rawValue)")
-    }
-
     var body: some View {
         HStack(spacing: 0) {
             // 左欄
@@ -546,7 +548,7 @@ private struct EditReservationSheet: View {
                 HStack {
                     Button("取消") { dismiss() }.foregroundColor(.secondary)
                     Spacer()
-                    Text(nameDisplay).font(.headline)
+                    Text("編輯訂位").font(.headline)
                     Spacer()
                     Text("取消").foregroundColor(.clear)
                 }
@@ -556,6 +558,33 @@ private struct EditReservationSheet: View {
 
                 ScrollView {
                     VStack(spacing: 0) {
+                        // 姓名 + 稱謂
+                        HStack {
+                            Text("姓名").font(.subheadline).foregroundColor(.secondary).frame(width: 44, alignment: .leading)
+                            TextField("姓名", text: $name).submitLabel(.done)
+                            ForEach(ReservationTitle.allCases.filter { $0 != .none }, id: \.self) { t in
+                                Button(t.rawValue) { title = t }
+                                    .font(.caption.bold())
+                                    .padding(.horizontal, 10).padding(.vertical, 5)
+                                    .background(title == t ? Color.peacock : Color.gray.opacity(0.12))
+                                    .foregroundColor(title == t ? .white : .primary)
+                                    .clipShape(Capsule())
+                                    .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.horizontal, 20).padding(.vertical, 14)
+
+                        Divider()
+
+                        // 電話
+                        HStack {
+                            Text("電話").font(.subheadline).foregroundColor(.secondary).frame(width: 44, alignment: .leading)
+                            TextField("電話", text: $phone).keyboardType(.phonePad).submitLabel(.done)
+                        }
+                        .padding(.horizontal, 20).padding(.vertical, 14)
+
+                        Divider()
+
                         // 時間（顯示，點右欄操作）
                         HStack {
                             Text("時間").font(.subheadline).foregroundColor(.secondary).frame(width: 44, alignment: .leading)
@@ -634,6 +663,9 @@ private struct EditReservationSheet: View {
                         // 儲存
                         Button {
                             var updated = reservation
+                            updated.name = name.trimmingCharacters(in: .whitespaces)
+                            updated.title = title
+                            updated.phone = phone.trimmingCharacters(in: .whitespaces)
                             updated.time = formattedTime
                             updated.adults = adults
                             updated.children = children
