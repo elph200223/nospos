@@ -83,7 +83,9 @@ final class ReservationStore: ObservableObject {
         do {
             let fetched = try await APIClient.shared.fetchReservations()
             reservations = fetched.sorted { ($0.date + $0.time) < ($1.date + $1.time) }
+            lastError = nil
         } catch {
+            guard !(error is CancellationError) else { return }
             lastError = error.localizedDescription
             print("⚠️ ReservationStore.refresh failed: \(error.localizedDescription)")
         }
