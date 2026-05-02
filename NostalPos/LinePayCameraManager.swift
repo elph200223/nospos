@@ -194,7 +194,7 @@ final class LinePayCameraManager: NSObject, ObservableObject {
 
     private func configureMetadataOutput() {
         metadataOutput.setMetadataObjectsDelegate(self, queue: metadataQueue)
-        metadataOutput.metadataObjectTypes = [.qr]
+        metadataOutput.metadataObjectTypes = [.qr, .code128]
 
         if let conn = metadataOutput.connection(with: .video),
            conn.isVideoOrientationSupported {

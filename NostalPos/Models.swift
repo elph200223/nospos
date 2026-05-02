@@ -82,13 +82,30 @@ enum Sweetness: String, CaseIterable, Codable {
     var display: String { rawValue }
 }
 
+// MARK: - 動態 Toggle 系統
+
+struct AppToggle: Identifiable, Codable, Hashable {
+    var toggleId: String
+    var label: String
+    var priceEffect: Int
+    var sortOrder: Int
+    var isActive: Bool
+
+    var id: String { toggleId }
+}
+
+struct SelectedToggle: Codable, Hashable {
+    let label: String
+    let priceEffect: Int
+}
+
 // MARK: - 購物車 / 訂單行 ------------------------------
 
 struct CartLine: Identifiable, Hashable {
     let id = UUID()
     let item: MenuItem
     var quantity: Int
-    
+
     var temperature: Temperature
     var sweetness: Sweetness?
     var isOatMilk: Bool
@@ -96,32 +113,33 @@ struct CartLine: Identifiable, Hashable {
     var isEcoCup: Bool
     var isTakeawayAfterMeal: Bool
     var needsCutlery: Bool
-    
-    // 單杯價格計算（不含其他附加 AddOnsJSON，之後要可以再加）
+    var customToggles: [SelectedToggle] = []
+
+    // 單杯價格計算
     var unitPrice: Int {
         var p = item.price
         if isRefill { p -= 20 }
         if isEcoCup { p -= 5 }
         if isOatMilk { p += 20 }
+        p += customToggles.reduce(0) { $0 + $1.priceEffect }
         return max(p, 0)
     }
-    
+
     var lineTotal: Int {
         unitPrice * quantity
     }
-    
+
     var displayName: String {
         var parts: [String] = [item.name]
-        
-        // ⭐ 溫度是 .none（不選）就不要顯示
+
         if temperature != .none {
             parts.append(temperature.display)
         }
-        
+
         if let s = sweetness {
             parts.append(s.display)
         }
-        
+
         if isOatMilk {
             parts.append("燕麥奶(+20)")
         }
@@ -137,28 +155,35 @@ struct CartLine: Identifiable, Hashable {
         if needsCutlery {
             parts.append("要餐具")
         }
-        
+        for t in customToggles {
+            if t.priceEffect != 0 {
+                let sign = t.priceEffect > 0 ? "+" : ""
+                parts.append("\(t.label)(\(sign)\(t.priceEffect))")
+            } else {
+                parts.append(t.label)
+            }
+        }
+
         return parts.joined(separator: " / ")
     }
+
     var detailDescription: String? {
         var parts: [String] = []
 
-        // 溫度（如果你不想顯示 .none，可照 displayName 的規則）
         if temperature != .none {
             parts.append(temperature.display)
         }
 
-        // 甜度
         if let s = sweetness {
             parts.append(s.display)
         }
 
-        // 其他旗標
         if isOatMilk { parts.append("燕麥") }
         if isRefill { parts.append("續杯") }
         if isEcoCup { parts.append("環保杯") }
         if isTakeawayAfterMeal { parts.append("餐後外帶") }
         if needsCutlery { parts.append("要餐具") }
+        for t in customToggles { parts.append(t.label) }
 
         let text = parts.joined(separator: " / ")
         return text.isEmpty ? nil : text

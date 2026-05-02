@@ -92,6 +92,7 @@ class POSViewModel: ObservableObject {
     @Published var categories: [Category] = []
     @Published var items: [MenuItem] = []
     @Published var categoryAddOns: [CategoryAddOn] = []
+    @Published var appToggles: [AppToggle] = []
 
     // UI 狀態
     @Published var isLoading: Bool = false
@@ -439,7 +440,10 @@ class POSViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
         do {
-            let menu = try await APIClient.shared.fetchMenu(forceRefresh: true)
+            async let menuTask = APIClient.shared.fetchMenu(forceRefresh: true)
+            async let togglesTask = APIClient.shared.fetchToggles()
+
+            let menu = try await menuTask
             categories = menu.categories.sorted { ($0.sortOrder ?? 0) < ($1.sortOrder ?? 0) }
             items = menu.items
             categoryAddOns = menu.categoryAddOns
@@ -447,6 +451,8 @@ class POSViewModel: ObservableObject {
             if let first = categories.first {
                 selectedCategoryId = first.categoryId
             }
+
+            appToggles = (try? await togglesTask) ?? []
         } catch {
             errorMessage = "載入菜單失敗：\(error.localizedDescription)"
         }

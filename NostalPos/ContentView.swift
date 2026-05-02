@@ -76,6 +76,7 @@ struct ContentView: View {
         .sheet(item: $vm.showingOptionsForItem) { item in
             ItemOptionsSheet(
                 mode: .add(item: item),
+                appToggles: vm.appToggles,
                 onConfirm: { line in
                     vm.addToCart(line)
                 }

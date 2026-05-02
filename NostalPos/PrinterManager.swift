@@ -6,6 +6,7 @@
 import Foundation
 import Network
 import CoreFoundation
+import UIKit
 
 class PrinterManager {
     static let shared = PrinterManager()
@@ -32,6 +33,55 @@ class PrinterManager {
     private let esc_normal: [UInt8] = [0x1D, 0x21, 0x00]
     private let esc_cut: [UInt8]    = [0x1D, 0x56, 0x42, 0x00]
     private let esc_kickDrawer: [UInt8] = [0x1B, 0x70, 0x00, 0x19, 0xFA]   // 開前盤
+
+    // MARK: - UIImage → ESC/POS GS v 0 點陣圖資料
+
+    private func imageToRasterData(_ image: UIImage) -> Data {
+        guard let cgImage = image.cgImage else { return Data() }
+
+        let width        = cgImage.width
+        let height       = cgImage.height
+        let bytesPerLine = (width + 7) / 8     // 576px → 72 bytes/行
+
+        // 把 UIImage 畫進 8-bit 灰階 bitmap（需翻轉 y 軸，因 CGContext 原點在左下）
+        var pixels = [UInt8](repeating: 255, count: width * height)
+        let graySpace = CGColorSpaceCreateDeviceGray()
+        guard let bitmapCtx = CGContext(
+            data: &pixels,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: width,
+            space: graySpace,
+            bitmapInfo: CGImageAlphaInfo.none.rawValue
+        ) else { return Data() }
+
+        // UIGraphicsImageRenderer 輸出的 cgImage row-0 在頂部；
+        // CoreGraphics 原點在左下，所以需翻轉才能讓 pixels[0] = 頂端第一列。
+        bitmapCtx.translateBy(x: 0, y: CGFloat(height))
+        bitmapCtx.scaleBy(x: 1.0, y: -1.0)
+        bitmapCtx.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        // 轉 1-bit（< 128 視為黑色 = bit 1）
+        var bits = [UInt8](repeating: 0, count: bytesPerLine * height)
+        for row in 0..<height {
+            for col in 0..<width {
+                if pixels[row * width + col] < 128 {
+                    bits[row * bytesPerLine + col / 8] |= 0x80 >> (col % 8)
+                }
+            }
+        }
+
+        // 組裝 GS v 0 指令
+        var data = Data()
+        data.append(contentsOf: [0x1D, 0x76, 0x30, 0x00])           // GS v 0, normal
+        data.append(UInt8( bytesPerLine       & 0xFF))               // xL
+        data.append(UInt8((bytesPerLine >> 8) & 0xFF))               // xH
+        data.append(UInt8( height             & 0xFF))               // yL
+        data.append(UInt8((height      >> 8)  & 0xFF))               // yH
+        data.append(contentsOf: bits)
+        return data
+    }
 
     // MARK: - 舊版：用 OrderRequest 出單（保留給重印等情境）
 
@@ -116,7 +166,7 @@ class PrinterManager {
         }
     }
 
-    // MARK: - 新版：用 CartLine 出單（品項一行、大字；附加選項下一行、小字）
+    // MARK: - 新版：用 CartLine 出單（圖片式排版）
 
     func printReceiptForCart(
         cart: [CartLine],
@@ -126,6 +176,14 @@ class PrinterManager {
     ) {
         guard !printerIP.isEmpty else { return }
 
+        let image = ReceiptRenderer.renderReceiptImage(
+            cart: cart,
+            tableName: tableName,
+            payMethod: payMethod,
+            amount: amount
+        )
+        let rasterData = imageToRasterData(image)
+
         let connection = NWConnection(
             host: NWEndpoint.Host(printerIP),
             port: NWEndpoint.Port(rawValue: printerPort)!,
@@ -137,101 +195,22 @@ class PrinterManager {
             connection.send(content: Data(bytes), completion: .contentProcessed { _ in })
         }
 
-        func sendText(_ text: String) {
-            guard let data = text.data(using: big5Encoding) else { return }
-            connection.send(content: data, completion: .contentProcessed { _ in })
-        }
-
-        // ====== 開始列印 ======
         send(esc_init)
-        send(esc_fontB)
+        connection.send(content: rasterData, completion: .contentProcessed { _ in })
 
-        // 店名置中 + 放大
-        send(esc_center)
-        send(esc_big)
-        sendText("眷鳥咖啡商行\n")
-        send(esc_normal)
-        send(esc_left)
-
-        // 桌位 + 時間（同一行，桌位大字）
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MM/dd HH:mm"
-        let timeStr = formatter.string(from: Date())
-
-        let table = tableName.isEmpty ? "外帶" : tableName
-
-        send(esc_big)
-        sendText("\(table)  \(timeStr)\n")
-        send(esc_normal)
-        sendText("--------------------------------\n")
-
-        // ====== 用 CartLine 印每一個品項 ======
-        for line in cart {
-            let baseName = line.item.name
-            let qtyPrice = "x\(line.quantity)  \(line.lineTotal)"
-
-            // 第一行：品項 + 數量 + 小計（大字）
-            send(esc_big)
-            sendText("\(baseName)  \(qtyPrice)\n")
-            send(esc_normal)
-
-            // 第二行：附加選項（小字，一行）
-            var options: [String] = []
-
-            // ✅ 溫度：只有不是 .none 才印，而且用 display（會是「熱 / 冰 / 一顆冰」）
-            if line.temperature != .none {
-                options.append(line.temperature.display)
-            }
-
-            // ✅ 甜度：有選才印（nil = 不選）
-            if let s = line.sweetness {
-                options.append(s.display)
-            }
-            if line.isOatMilk {
-                options.append("燕麥奶")
-            }
-            if line.isRefill {
-                options.append("續點")
-            }
-            if line.isEcoCup {
-                options.append("環保杯")
-            }
-
-            if !options.isEmpty {
-                let optionLine = "○ " + options.joined(separator: " / ")
-                sendText("  \(optionLine)\n")
-            }
-
-            // 品項之間空一行
-            sendText("\n")
-        }
-
-        sendText("--------------------------------\n")
-
-        // 總計金額（放大）
-        send(esc_big)
-        sendText("總計：\(amount) 元\n")
-        send(esc_normal)
-        sendText("\n")
-
-        // 已結帳（支付方式）在最下方
         let pay = payMethod.uppercased()
-        sendText("已結帳（\(pay)）\n")
-        sendText("\n\n")
-
-        // 只有現金結帳才開前盤
         let isCash = pay.contains("CASH") || pay.contains("現金")
         if isCash {
             send(esc_kickDrawer)
         }
 
-        // 切紙
         send(esc_cut)
 
-        DispatchQueue.global().asyncAfter(deadline: .now() + 1.0) {
+        DispatchQueue.global().asyncAfter(deadline: .now() + 3.0) {
             connection.cancel()
         }
     }
+
     func printReprintReceipt(
         cart: [CartLine],
         tableName: String,
@@ -240,6 +219,14 @@ class PrinterManager {
     ) {
         guard !printerIP.isEmpty else { return }
 
+        let image = ReceiptRenderer.renderReceiptImage(
+            cart: cart,
+            tableName: tableName,
+            payMethod: payMethod,
+            amount: amount
+        )
+        let rasterData = imageToRasterData(image)
+
         let connection = NWConnection(
             host: NWEndpoint.Host(printerIP),
             port: NWEndpoint.Port(rawValue: printerPort)!,
@@ -251,82 +238,11 @@ class PrinterManager {
             connection.send(content: Data(bytes), completion: .contentProcessed { _ in })
         }
 
-        func sendText(_ text: String) {
-            guard let data = text.data(using: big5Encoding) else { return }
-            connection.send(content: data, completion: .contentProcessed { _ in })
-        }
-
         send(esc_init)
-        send(esc_fontB)
-
-        send(esc_center)
-        send(esc_big)
-        sendText("眷鳥咖啡商行\n")
-        send(esc_normal)
-        send(esc_left)
-
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MM/dd HH:mm"
-        let timeStr = formatter.string(from: Date())
-
-        let table = tableName.isEmpty ? "外帶" : tableName
-
-        send(esc_big)
-        sendText("\(table)  \(timeStr)\n")
-        send(esc_normal)
-        sendText("--------------------------------\n")
-
-        for line in cart {
-            let baseName = line.item.name
-            let qtyPrice = "x\(line.quantity)  \(line.lineTotal)"
-
-            send(esc_big)
-            sendText("\(baseName)  \(qtyPrice)\n")
-            send(esc_normal)
-
-            var options: [String] = []
-            if line.temperature != .none {
-                options.append(line.temperature.display)
-            }
-            if let s = line.sweetness {
-                options.append(s.display)
-            }
-            if line.isOatMilk {
-                options.append("燕麥奶")
-            }
-            if line.isRefill {
-                options.append("續點")
-            }
-            if line.isEcoCup {
-                options.append("環保杯")
-            }
-
-            if !options.isEmpty {
-                let optionLine = "○ " + options.joined(separator: " / ")
-                sendText("  \(optionLine)\n")
-            }
-
-            sendText("\n")
-        }
-
-        sendText("--------------------------------\n")
-
-        send(esc_big)
-        sendText("總計：\(amount) 元\n")
-        send(esc_normal)
-        sendText("\n")
-
-        let pay = (payMethod ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        if pay.isEmpty {
-            sendText("未結帳（重印）\n")
-        } else {
-            sendText("已結帳（\(pay.uppercased())）\n")
-        }
-        sendText("\n\n")
-
+        connection.send(content: rasterData, completion: .contentProcessed { _ in })
         send(esc_cut)
 
-        DispatchQueue.global().asyncAfter(deadline: .now() + 1.0) {
+        DispatchQueue.global().asyncAfter(deadline: .now() + 3.0) {
             connection.cancel()
         }
     }

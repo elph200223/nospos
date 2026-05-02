@@ -9,8 +9,9 @@
 /* Begin PBXBuildFile section */
 		361DEEF72EFFA94700E76EDA /* TableTimerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 361DEEF62EFFA94700E76EDA /* TableTimerStore.swift */; };
 		361DEEF92F017F5900E76EDA /* ClearedTablesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 361DEEF82F017F5900E76EDA /* ClearedTablesStore.swift */; };
-		361DEEFD2F100000000ABCDE /* TodoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 361DEEFC2F100000000ABCDE /* TodoStore.swift */; };
 		361DEEFB2F057BCF00E76EDA /* LinePayCameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 361DEEFA2F057BCF00E76EDA /* LinePayCameraManager.swift */; };
+		361DEEFD2F100000000ABCDE /* TodoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 361DEEFC2F100000000ABCDE /* TodoStore.swift */; };
+		3662810B2FA5B755001C9DF6 /* ReceiptRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3662810A2FA5B754001C9DF6 /* ReceiptRenderer.swift */; };
 		36B023072ECBA1D300A6EFB2 /* NostalPosApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B023062ECBA1D300A6EFB2 /* NostalPosApp.swift */; };
 		36B023092ECBA1D300A6EFB2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B023082ECBA1D300A6EFB2 /* ContentView.swift */; };
 		36B0230B2ECBA1D400A6EFB2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 36B0230A2ECBA1D400A6EFB2 /* Assets.xcassets */; };
@@ -37,10 +38,10 @@
 		36B0235E2ECEC3F200A6EFB2 /* CloseShiftView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B0235D2ECEC3F100A6EFB2 /* CloseShiftView.swift */; };
 		36B023602ECECEE100A6EFB2 /* TableHistorySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B0235F2ECECEE100A6EFB2 /* TableHistorySheet.swift */; };
 		36B023622ECF366000A6EFB2 /* PrinterManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B023612ECF366000A6EFB2 /* PrinterManager.swift */; };
+		36D5904E2EEEA9910058A322 /* POSViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36D5904D2EEEA9910058A322 /* POSViewModel.swift */; };
 		CCDD00022EFF000000112233 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCDD00012EFF000000112233 /* DashboardView.swift */; };
 		CCDD00042EFF000000112233 /* CakeOrderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCDD00032EFF000000112233 /* CakeOrderService.swift */; };
 		CCDD00062EFF000000112233 /* ReservationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCDD00052EFF000000112233 /* ReservationStore.swift */; };
-		36D5904E2EEEA9910058A322 /* POSViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36D5904D2EEEA9910058A322 /* POSViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -63,8 +64,9 @@
 /* Begin PBXFileReference section */
 		361DEEF62EFFA94700E76EDA /* TableTimerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableTimerStore.swift; sourceTree = "<group>"; };
 		361DEEF82F017F5900E76EDA /* ClearedTablesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClearedTablesStore.swift; sourceTree = "<group>"; };
-		361DEEFC2F100000000ABCDE /* TodoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoStore.swift; sourceTree = "<group>"; };
 		361DEEFA2F057BCF00E76EDA /* LinePayCameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinePayCameraManager.swift; sourceTree = "<group>"; };
+		361DEEFC2F100000000ABCDE /* TodoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoStore.swift; sourceTree = "<group>"; };
+		3662810A2FA5B754001C9DF6 /* ReceiptRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReceiptRenderer.swift; sourceTree = "<group>"; };
 		36B023032ECBA1D300A6EFB2 /* NostalPos.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NostalPos.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		36B023062ECBA1D300A6EFB2 /* NostalPosApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostalPosApp.swift; sourceTree = "<group>"; };
 		36B023082ECBA1D300A6EFB2 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -95,10 +97,10 @@
 		36B0235D2ECEC3F100A6EFB2 /* CloseShiftView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloseShiftView.swift; sourceTree = "<group>"; };
 		36B0235F2ECECEE100A6EFB2 /* TableHistorySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableHistorySheet.swift; sourceTree = "<group>"; };
 		36B023612ECF366000A6EFB2 /* PrinterManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrinterManager.swift; sourceTree = "<group>"; };
+		36D5904D2EEEA9910058A322 /* POSViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = POSViewModel.swift; sourceTree = "<group>"; };
 		CCDD00012EFF000000112233 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		CCDD00032EFF000000112233 /* CakeOrderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CakeOrderService.swift; sourceTree = "<group>"; };
 		CCDD00052EFF000000112233 /* ReservationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReservationStore.swift; sourceTree = "<group>"; };
-		36D5904D2EEEA9910058A322 /* POSViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = POSViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -167,6 +169,7 @@
 				36B023482ECC80D200A6EFB2 /* CartPanel.swift */,
 				36B0234A2ECCCA0900A6EFB2 /* UnifiedCheckoutSheet.swift */,
 				36B0234E2ECCEC4400A6EFB2 /* LinePayCameraSheet.swift */,
+				3662810A2FA5B754001C9DF6 /* ReceiptRenderer.swift */,
 				36B023542ECCFED600A6EFB2 /* CameraPermissionManager.swift */,
 				36B023572ECDA0E000A6EFB2 /* LinePayService.swift */,
 				36B023592ECE0D6B00A6EFB2 /* AdminPanelView.swift */,
@@ -345,6 +348,7 @@
 				361DEEFB2F057BCF00E76EDA /* LinePayCameraManager.swift in Sources */,
 				36B0233D2ECC6ACC00A6EFB2 /* ItemOptionsSheet.swift in Sources */,
 				36B0235C2ECE0D8E00A6EFB2 /* TodayOrdersView.swift in Sources */,
+				3662810B2FA5B755001C9DF6 /* ReceiptRenderer.swift in Sources */,
 				36B023372ECBA79500A6EFB2 /* TableTimer.swift in Sources */,
 				36B023312ECBA25500A6EFB2 /* Models.swift in Sources */,
 				36B023602ECECEE100A6EFB2 /* TableHistorySheet.swift in Sources */,

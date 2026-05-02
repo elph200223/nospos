@@ -729,9 +729,56 @@ extension APIClient {
     }
 }
 
-// MARK: - 訂位 API
+// MARK: - 動態 Toggle
 
 extension APIClient {
+
+    private struct TogglesResponse: Decodable {
+        let ok: Bool?
+        let toggles: [AppToggle]?
+    }
+
+    private struct SaveTogglesBody: Encodable {
+        let action = "saveToggles"
+        let toggles: [AppToggle]
+    }
+
+    func fetchToggles() async throws -> [AppToggle] {
+        let resp = try await getJSON(action: "getToggles", timeout: 15, as: TogglesResponse.self)
+        return resp.toggles ?? []
+    }
+
+    func saveToggles(_ toggles: [AppToggle]) async throws {
+        let body = SaveTogglesBody(toggles: toggles)
+        let _: GenericOKResponse = try await postJSON(body, as: GenericOKResponse.self, timeout: 20)
+    }
+}
+
+// MARK: - 訂位 API（PostgreSQL 版）
+
+extension APIClient {
+
+    // nos-cake-order API
+    private var posAPIBase: String { "https://cake-order-oduk.vercel.app/api/pos" }
+    private var posAPIKey: String { ProcessInfo.processInfo.environment["POS_API_KEY"] ?? "nospos2026" }
+
+    private func posRequest(path: String, method: String = "GET", body: Data? = nil) async throws -> Data {
+        guard let url = URL(string: posAPIBase + path) else { throw URLError(.badURL) }
+        var req = URLRequest(url: url)
+        req.httpMethod = method
+        req.setValue("Bearer \(posAPIKey)", forHTTPHeaderField: "Authorization")
+        if let body = body {
+            req.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+            req.httpBody = body
+        }
+        req.timeoutInterval = 20
+        let (data, response) = try await URLSession.shared.data(for: req)
+        if let http = response as? HTTPURLResponse, http.statusCode >= 400 {
+            throw NSError(domain: "APIClient", code: http.statusCode,
+                          userInfo: [NSLocalizedDescriptionKey: "HTTP \(http.statusCode)"])
+        }
+        return data
+    }
 
     struct ReservationPayload: Encodable {
         let id: String
@@ -747,43 +794,18 @@ extension APIClient {
         let preorderJSON: String
 
         init(from r: Reservation) {
-            id       = r.id.uuidString
-            date     = r.date
-            time     = r.time
-            name     = r.name
-            title    = r.title.rawValue
-            phone    = r.phone
-            adults   = r.adults
-            children = r.children
-            note     = r.note
-            status   = r.status.rawValue
+            id           = r.id.uuidString
+            date         = r.date
+            time         = r.time
+            name         = r.name
+            title        = r.title.rawValue
+            phone        = r.phone
+            adults       = r.adults
+            children     = r.children
+            note         = r.note
+            status       = r.status.rawValue
             preorderJSON = (try? String(data: JSONEncoder().encode(r.preorderItems), encoding: .utf8)) ?? "[]"
         }
-    }
-
-    struct ReservationStatusPayload: Encodable {
-        let id: String
-        let status: String
-    }
-
-    private struct CreateReservationBody: Encodable {
-        let action = "createReservation"
-        let reservation: ReservationPayload
-    }
-
-    private struct UpdateReservationBody: Encodable {
-        let action = "updateReservation"
-        let reservation: ReservationPayload
-    }
-
-    private struct UpdateReservationStatusBody: Encodable {
-        let action = "updateReservation"
-        let reservation: ReservationStatusPayload
-    }
-
-    private struct DeleteReservationBody: Encodable {
-        let action = "deleteReservation"
-        let id: String
     }
 
     private struct ReservationsResponse: Decodable {
@@ -830,26 +852,33 @@ extension APIClient {
     }
 
     func fetchReservations() async throws -> [Reservation] {
-        let response = try await getJSON(action: "getReservations", timeout: 20, as: ReservationsResponse.self)
+        // 抓今天前後 60 天的訂位
+        let fmt = DateFormatter(); fmt.dateFormat = "yyyy-MM-dd"
+        let today = Date()
+        let from = fmt.string(from: Calendar.current.date(byAdding: .day, value: -1, to: today)!)
+        let to   = fmt.string(from: Calendar.current.date(byAdding: .day, value: 60, to: today)!)
+        let data = try await posRequest(path: "/reservations?from=\(from)&to=\(to)")
+        let response = try decoder.decode(ReservationsResponse.self, from: data)
         return (response.reservations ?? []).compactMap { $0.toReservation() }
     }
 
     func createReservation(_ r: Reservation) async throws {
-        let body = CreateReservationBody(reservation: ReservationPayload(from: r))
-        let _: GenericOKResponse = try await postJSON(body, as: GenericOKResponse.self, timeout: 20)
+        struct Body: Encodable { let reservation: ReservationPayload }
+        let body = try encoder.encode(Body(reservation: ReservationPayload(from: r)))
+        _ = try await posRequest(path: "/reservations", method: "POST", body: body)
     }
 
     func updateReservation(_ r: Reservation) async throws {
-        let body = UpdateReservationBody(reservation: ReservationPayload(from: r))
-        let _: GenericOKResponse = try await postJSON(body, as: GenericOKResponse.self, timeout: 20)
+        struct Body: Encodable { let reservation: ReservationPayload }
+        let body = try encoder.encode(Body(reservation: ReservationPayload(from: r)))
+        _ = try await posRequest(path: "/reservations/\(r.id.uuidString)", method: "PATCH", body: body)
     }
 
     func deleteReservation(id: UUID) async throws {
-        let body = DeleteReservationBody(id: id.uuidString)
-        let _: GenericOKResponse = try await postJSON(body, as: GenericOKResponse.self, timeout: 20)
+        _ = try await posRequest(path: "/reservations/\(id.uuidString)", method: "DELETE")
     }
 
-    // MARK: - Blacklist
+    // MARK: - Blacklist（仍走 GAS）
 
     private struct BlacklistResponse: Decodable {
         let ok: Bool?

@@ -69,6 +69,9 @@ final class ReservationStore: ObservableObject {
     @Published var isLoading = false
     @Published var lastError: String?
 
+    /// 正在等待伺服器回應的訂位 ID（refresh 時不蓋掉這些）
+    private var pendingUpdateIds: Set<UUID> = []
+
     private let legacyKey = "pos.reservations"
 
     private init() {
@@ -76,13 +79,21 @@ final class ReservationStore: ObservableObject {
         Task { await refresh() }
     }
 
-    // 從 GAS 重新抓取
+    // 從伺服器重新抓取（不蓋掉尚未同步完成的本機變更）
     func refresh() async {
         isLoading = true
         defer { isLoading = false }
         do {
             let fetched = try await APIClient.shared.fetchReservations()
-            reservations = fetched.sorted { ($0.date + $0.time) < ($1.date + $1.time) }
+            // 若某筆訂位正在等待 PATCH 回應，保留本機版本，避免蓋掉樂觀更新
+            let merged = fetched.map { serverR -> Reservation in
+                if pendingUpdateIds.contains(serverR.id),
+                   let localR = reservations.first(where: { $0.id == serverR.id }) {
+                    return localR
+                }
+                return serverR
+            }
+            reservations = merged.sorted { ($0.date + $0.time) < ($1.date + $1.time) }
             lastError = nil
         } catch {
             guard !(error is CancellationError) else { return }
@@ -91,19 +102,43 @@ final class ReservationStore: ObservableObject {
         }
     }
 
-    // 新增：樂觀更新 + 背景同步
+    // 新增：樂觀更新 + 背景同步（失敗時移除本機紀錄並顯示錯誤）
     func add(_ r: Reservation) {
         reservations.append(r)
         reservations.sort { ($0.date + $0.time) < ($1.date + $1.time) }
-        Task { try? await APIClient.shared.createReservation(r) }
+        Task {
+            do {
+                try await APIClient.shared.createReservation(r)
+            } catch {
+                // POST 失敗 → 移除本機的樂觀新增，否則這筆訂位永遠只存在本機
+                reservations.removeAll { $0.id == r.id }
+                lastError = "訂位新增失敗：\(error.localizedDescription)"
+                print("⚠️ createReservation failed: \(error)")
+            }
+        }
     }
 
-    // 更新：樂觀更新 + 背景同步
+    // 更新：樂觀更新 + 背景同步（失敗時復原並顯示錯誤）
     func update(_ r: Reservation) {
         guard let idx = reservations.firstIndex(where: { $0.id == r.id }) else { return }
+        let old = reservations[idx]
         reservations[idx] = r
         reservations.sort { ($0.date + $0.time) < ($1.date + $1.time) }
-        Task { try? await APIClient.shared.updateReservation(r) }
+        pendingUpdateIds.insert(r.id)
+        Task {
+            defer { pendingUpdateIds.remove(r.id) }
+            do {
+                try await APIClient.shared.updateReservation(r)
+            } catch {
+                // API 失敗 → 復原本機狀態
+                if let revertIdx = reservations.firstIndex(where: { $0.id == r.id }) {
+                    reservations[revertIdx] = old
+                    reservations.sort { ($0.date + $0.time) < ($1.date + $1.time) }
+                }
+                lastError = "訂位更新失敗：\(error.localizedDescription)"
+                print("⚠️ updateReservation failed: \(error)")
+            }
+        }
     }
 
     // 刪除：樂觀更新 + 背景同步

@@ -13,7 +13,10 @@ struct CartPanel: View {
     @State private var showingCheckoutSheet = false
     // LINE Pay 掃碼視窗
     @State private var showingLinePayScanner = false
-    
+
+    // 折後實際結帳金額（含折扣後）
+    @State private var checkoutFinalAmount: Int = 0
+
     // 處理中避免連點
     @State private var isProcessingLinePay = false
     
@@ -240,6 +243,7 @@ struct CartPanel: View {
         .sheet(item: $editingLine) { line in
             ItemOptionsSheet(
                 mode: .edit(line: line),
+                appToggles: viewModel.appToggles,
                 onConfirm: { updatedLine in
                     applyEditedLineAndSync(old: line, new: updatedLine)
                     editingLine = nil
@@ -249,16 +253,19 @@ struct CartPanel: View {
         .sheet(isPresented: $showingCheckoutSheet) {
             UnifiedCheckoutSheet(
                 totalAmount: totalAmount,
-                onCashConfirm: { _ in
+                onCashConfirm: { _, finalAmount in
+                    checkoutFinalAmount = finalAmount
                     performCheckout(using: .cash)
                     showingCheckoutSheet = false
                 },
-                onLinePay: {
+                onLinePay: { finalAmount in
+                    checkoutFinalAmount = finalAmount
                     if showingLinePayScanner { return }
                     showingCheckoutSheet = false
                     showingLinePayScanner = true
                 },
-                onTapPay: {
+                onTapPay: { finalAmount in
+                    checkoutFinalAmount = finalAmount
                     performCheckout(using: .tapPay)
                     showingCheckoutSheet = false
                 },
@@ -605,7 +612,7 @@ struct CartPanel: View {
             return
         }
         
-        let amount = totalAmount
+        let amount = checkoutFinalAmount > 0 ? checkoutFinalAmount : totalAmount
         let orderId = UUID().uuidString
         let productName = "店內消費 - \(viewModel.currentTableName)"
         
@@ -661,9 +668,10 @@ struct CartPanel: View {
             return OrderItem(name: line.displayName, price: unitPrice, qty: qty)
         }
         
+        let effectiveAmount = checkoutFinalAmount > 0 ? checkoutFinalAmount : totalAmount
         let order = OrderRequest(
             orderId: UUID().uuidString,
-            amount: totalAmount,
+            amount: effectiveAmount,
             items: backendItems,
             payMethod: payKey,
             note: "桌位：\(table)",

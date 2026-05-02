@@ -182,6 +182,11 @@ function doGet(e) {
     return jsonResponse_(getAdminMenu_());
   }
 
+  // 自訂 Toggle 管理
+  if (action === 'getToggles') {
+    return jsonResponse_(getToggles_());
+  }
+
   // 今日訂單查詢
   if (action === 'getTodayOrders') {
     return jsonResponse_(getTodayOrders_());
@@ -256,6 +261,9 @@ function doPost(e) {
 
     case 'saveAdminMenu':
       return jsonResponse_(saveAdminMenu_(data));
+
+    case 'saveToggles':
+      return jsonResponse_(saveToggles_(data));
 
     case 'deleteOrder':
       return jsonResponse_(deleteOrder_(data));
@@ -810,6 +818,72 @@ function getAdminMenu_() {
   }
 
   return { categories: cats };
+}
+
+// MARK: - 自訂 Toggle 管理
+
+function getToggles_() {
+  var ss = SpreadsheetApp.getActive();
+  var sheet = ss.getSheetByName('Toggles');
+  if (!sheet) {
+    sheet = ss.insertSheet('Toggles');
+    sheet.appendRow(['ToggleId', 'Label', 'PriceEffect', 'SortOrder', 'IsActive']);
+    return { ok: true, toggles: [] };
+  }
+
+  var data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return { ok: true, toggles: [] };
+
+  var header = data[0].map(String);
+  var idxId     = header.indexOf('ToggleId');
+  var idxLabel  = header.indexOf('Label');
+  var idxPrice  = header.indexOf('PriceEffect');
+  var idxSort   = header.indexOf('SortOrder');
+  var idxActive = header.indexOf('IsActive');
+
+  if (idxId === -1 || idxLabel === -1) return { ok: false, error: 'Toggles sheet missing required columns' };
+
+  var toggles = [];
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    var tid = String(row[idxId] || '').trim();
+    if (!tid) continue;
+    toggles.push({
+      toggleId:    tid,
+      label:       String(row[idxLabel] || ''),
+      priceEffect: Number(idxPrice !== -1 ? (row[idxPrice] || 0) : 0),
+      sortOrder:   Number(idxSort  !== -1 ? (row[idxSort]  || 0) : 0),
+      isActive:    idxActive !== -1 ? (row[idxActive] === true || String(row[idxActive]).toLowerCase() === 'true') : true
+    });
+  }
+  return { ok: true, toggles: toggles };
+}
+
+function saveToggles_(data) {
+  var toggles = data.toggles;
+  if (!Array.isArray(toggles)) return { ok: false, error: 'toggles must be an array' };
+
+  var ss = SpreadsheetApp.getActive();
+  var sheet = ss.getSheetByName('Toggles');
+  if (!sheet) {
+    sheet = ss.insertSheet('Toggles');
+  }
+
+  sheet.clearContents();
+  sheet.appendRow(['ToggleId', 'Label', 'PriceEffect', 'SortOrder', 'IsActive']);
+
+  for (var i = 0; i < toggles.length; i++) {
+    var t = toggles[i];
+    sheet.appendRow([
+      String(t.toggleId   || ''),
+      String(t.label      || ''),
+      Number(t.priceEffect != null ? t.priceEffect : 0),
+      Number(t.sortOrder   != null ? t.sortOrder   : i),
+      t.isActive === true
+    ]);
+  }
+
+  return { ok: true, savedCount: toggles.length };
 }
 
 function saveAdminMenu_(data) {
@@ -1592,6 +1666,28 @@ function archivePreviousMonthClosedOrders_(baseDate, tz) {
   return archiveResult;
 }
 
+function writeToMonthlySummary_(dateStr, amount) {
+  var MONTHLY_SS_ID = '1vfl_B7ZE9LW3pMiwzP1_6zbjhmOvdWjUXCPt_M1-eK4';
+  var mss = SpreadsheetApp.openById(MONTHLY_SS_ID);
+  var parts = dateStr.split('-');
+  var monthNum = parseInt(parts[1], 10);
+  var dayNum   = parseInt(parts[2], 10);
+  var sheet = mss.getSheetByName(String(monthNum));
+  if (!sheet) return;
+  var data = sheet.getDataRange().getValues();
+  var header = data[0];
+  var dateCol = header.indexOf('日期');
+  if (dateCol === -1) dateCol = 0;
+  var revenueCol = header.indexOf('營業額');
+  if (revenueCol === -1) return;
+  for (var i = 1; i < data.length; i++) {
+    if (parseInt(data[i][dateCol], 10) === dayNum) {
+      sheet.getRange(i + 1, revenueCol + 1).setValue(amount);
+      return;
+    }
+  }
+}
+
 function closeShift_(payload) {
   const ss = SpreadsheetApp.getActive();
   const tz = ss.getSpreadsheetTimeZone();
@@ -1627,6 +1723,7 @@ function closeShift_(payload) {
       new Date()
     ]);
     wroteCloseShiftRow = true;
+    writeToMonthlySummary_(summary.date, summary.closeableTotalAmount);
 
     const ordersSheet = ss.getSheetByName('Orders');
     if (!ordersSheet) throw new Error('Orders sheet not found');

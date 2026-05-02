@@ -151,13 +151,144 @@ final class AdminPanelViewModel: ObservableObject {
     }
 }
 
+// MARK: - Toggle Admin ViewModel
+
+@MainActor
+final class ToggleAdminViewModel: ObservableObject {
+    @Published var toggles: [AppToggle] = []
+    @Published var isLoading = false
+    @Published var isSaving = false
+    @Published var errorMessage: String?
+    @Published var successMessage: String?
+
+    func load() async {
+        isLoading = true
+        errorMessage = nil
+        successMessage = nil
+        do {
+            toggles = try await APIClient.shared.fetchToggles()
+        } catch {
+            errorMessage = "載入失敗：\(error.localizedDescription)"
+        }
+        isLoading = false
+    }
+
+    func save() async {
+        isSaving = true
+        errorMessage = nil
+        successMessage = nil
+        for i in toggles.indices {
+            toggles[i].sortOrder = i
+        }
+        do {
+            try await APIClient.shared.saveToggles(toggles)
+            successMessage = "已儲存（\(toggles.count) 個選項）"
+        } catch {
+            errorMessage = "儲存失敗：\(error.localizedDescription)"
+        }
+        isSaving = false
+    }
+
+    func addToggle() {
+        let newId = UUID().uuidString
+        toggles.append(AppToggle(
+            toggleId: newId,
+            label: "新選項",
+            priceEffect: 0,
+            sortOrder: toggles.count,
+            isActive: true
+        ))
+    }
+
+    func deleteToggle(at offsets: IndexSet) {
+        toggles.remove(atOffsets: offsets)
+    }
+
+    func moveToggle(from source: IndexSet, to destination: Int) {
+        toggles.move(fromOffsets: source, toOffset: destination)
+    }
+}
+
+// MARK: - Toggle Admin View
+
+struct ToggleAdminView: View {
+    @ObservedObject var vm: ToggleAdminViewModel
+
+    var body: some View {
+        Group {
+            if vm.isLoading {
+                VStack {
+                    Spacer()
+                    ProgressView()
+                    Text("載入中…").foregroundColor(.secondary).font(.subheadline)
+                    Spacer()
+                }
+            } else {
+                List {
+                    ForEach($vm.toggles) { $toggle in
+                        ToggleAdminRow(toggle: $toggle)
+                    }
+                    .onDelete(perform: vm.deleteToggle)
+                    .onMove(perform: vm.moveToggle)
+
+                    Button {
+                        vm.addToggle()
+                    } label: {
+                        HStack {
+                            Image(systemName: "plus.circle.fill")
+                                .foregroundColor(.peacock)
+                            Text("新增選項")
+                                .foregroundColor(.peacock)
+                        }
+                    }
+                }
+                .listStyle(.insetGrouped)
+                .environment(\.editMode, .constant(.active))
+            }
+        }
+        .task { await vm.load() }
+    }
+}
+
+struct ToggleAdminRow: View {
+    @Binding var toggle: AppToggle
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                TextField("選項名稱", text: $toggle.label)
+                    .font(.subheadline)
+                Spacer()
+                Toggle("", isOn: $toggle.isActive)
+                    .labelsHidden()
+                    .tint(.peacock)
+            }
+            HStack {
+                Text("加減價")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                TextField("0", value: $toggle.priceEffect, format: .number)
+                    .keyboardType(.numbersAndPunctuation)
+                    .font(.caption)
+                    .frame(width: 80)
+                    .textFieldStyle(.roundedBorder)
+                Text("元（0 = 無加減）")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
 // MARK: - View
 
 struct AdminPanelView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var vm = AdminPanelViewModel()
+    @StateObject private var toggleVM = ToggleAdminViewModel()
 
-    /// 記錄哪些分類是展開狀態（預設全收起來）
+    @State private var selectedTab: Int = 0
     @State private var expandedCategories: Set<String> = []
 
     var body: some View {
@@ -165,91 +296,104 @@ struct AdminPanelView: View {
             ZStack {
                 Color.posBg.ignoresSafeArea()
 
-                VStack(spacing: 12) {
-                    // 上方錯誤 / 成功訊息
-                    if let error = vm.errorMessage {
+                VStack(spacing: 0) {
+                    // Tab 切換
+                    Picker("", selection: $selectedTab) {
+                        Text("菜單管理").tag(0)
+                        Text("自訂選項").tag(1)
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+
+                    // 狀態訊息
+                    let errorMsg = selectedTab == 0 ? vm.errorMessage : toggleVM.errorMessage
+                    let successMsg = selectedTab == 0 ? vm.successMessage : toggleVM.successMessage
+
+                    if let error = errorMsg {
                         Text(error)
                             .font(.footnote)
                             .foregroundColor(.red)
                             .padding(8)
                             .frame(maxWidth: .infinity)
-                            .background(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color.white)
-                            )
+                            .background(RoundedRectangle(cornerRadius: 10).fill(Color.white))
                             .shadow(radius: 2)
                             .padding(.horizontal, 16)
                     }
-
-                    if let msg = vm.successMessage {
+                    if let msg = successMsg {
                         Text(msg)
                             .font(.footnote)
                             .foregroundColor(.green)
                             .padding(8)
                             .frame(maxWidth: .infinity)
-                            .background(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color.white)
-                            )
+                            .background(RoundedRectangle(cornerRadius: 10).fill(Color.white))
                             .shadow(radius: 2)
                             .padding(.horizontal, 16)
                     }
 
-                    if vm.isLoading {
-                        Spacer()
-                        ProgressView()
-                        Text("載入後台資料中…")
-                            .foregroundColor(.secondary)
-                            .font(.subheadline)
-                        Spacer()
-                    } else {
-                        ScrollView {
-                            LazyVStack(spacing: 16) {
-                                ForEach($vm.categories) { $category in
-                                    CategoryCard(
-                                        category: $category,
-                                        allCategories: vm.categories,
-                                        isExpanded: expandedCategories.contains(category.categoryId),
-                                        toggleExpanded: {
-                                            let id = category.categoryId
-                                            if expandedCategories.contains(id) {
-                                                expandedCategories.remove(id)
-                                            } else {
-                                                expandedCategories.insert(id)
+                    if selectedTab == 0 {
+                        // 菜單管理（原有內容）
+                        if vm.isLoading {
+                            Spacer()
+                            ProgressView()
+                            Text("載入後台資料中…")
+                                .foregroundColor(.secondary)
+                                .font(.subheadline)
+                            Spacer()
+                        } else {
+                            ScrollView {
+                                LazyVStack(spacing: 16) {
+                                    ForEach($vm.categories) { $category in
+                                        CategoryCard(
+                                            category: $category,
+                                            allCategories: vm.categories,
+                                            isExpanded: expandedCategories.contains(category.categoryId),
+                                            toggleExpanded: {
+                                                let id = category.categoryId
+                                                if expandedCategories.contains(id) {
+                                                    expandedCategories.remove(id)
+                                                } else {
+                                                    expandedCategories.insert(id)
+                                                }
+                                            },
+                                            onAddItem: {
+                                                vm.addItem(to: category.categoryId)
+                                                expandedCategories.insert(category.categoryId)
                                             }
-                                        },
-                                        onAddItem: {
-                                            vm.addItem(to: category.categoryId)
-                                            // 新增後確保這個分類是展開的
-                                            expandedCategories.insert(category.categoryId)
-                                        }
-                                    )
+                                        )
+                                    }
                                 }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
                             }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
                         }
+                    } else {
+                        // 自訂選項管理
+                        ToggleAdminView(vm: toggleVM)
                     }
                 }
             }
             .navigationTitle("後台管理")
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("關閉") {
-                        dismiss()
-                    }
+                    Button("關閉") { dismiss() }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        Task { await vm.save() }
-                    } label: {
-                        if vm.isSaving {
-                            ProgressView()
-                        } else {
-                            Text("儲存")
+                    if selectedTab == 0 {
+                        Button {
+                            Task { await vm.save() }
+                        } label: {
+                            if vm.isSaving { ProgressView() } else { Text("儲存") }
                         }
+                        .disabled(vm.isSaving)
+                    } else {
+                        Button {
+                            Task { await toggleVM.save() }
+                        } label: {
+                            if toggleVM.isSaving { ProgressView() } else { Text("儲存") }
+                        }
+                        .disabled(toggleVM.isSaving)
                     }
-                    .disabled(vm.isSaving)
                 }
             }
             .task {
